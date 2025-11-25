@@ -9,13 +9,15 @@ import {
   User, 
   Mail, 
   Phone, 
-  MapPin, 
   Lock, 
   Save,
   Camera,
-  Globe
+  Globe,
+  Home,
+  ChevronRight
 } from 'lucide-react';
 import { User as UserType } from '../lib/types';
+import { motion } from 'motion/react';
 
 interface ProfilePageProps {
   user: UserType;
@@ -71,42 +73,66 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 p-6 overflow-auto">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto h-full">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+        {/* Breadcrumb */}
+        <motion.nav
+          className="flex items-center gap-2 text-sm text-gray-500"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <Home className="size-4" />
+          <ChevronRight className="size-3" />
+          <span className="text-gray-900 font-medium">Perfil</span>
+        </motion.nav>
+
         {/* Header */}
-        <div>
-          <h1 className="text-gray-900">Meu Perfil</h1>
-          <p className="text-gray-600">Gerencie suas informações pessoais e de conta</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <User className="size-5 sm:size-6 text-indigo-600" />
+            <h1 className="text-xl sm:text-2xl text-gray-900 font-semibold">Meu Perfil</h1>
+          </div>
+          <p className="text-sm sm:text-base text-gray-600">Gerencie suas informações pessoais e de conta</p>
+        </motion.div>
 
         {/* Profile Header */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-6">
-              <div className="relative">
-                <Avatar className="size-24">
-                  <AvatarFallback className="bg-blue-600 text-white text-2xl">
-                    {getInitials(profileData.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <button className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                  <Camera className="size-4 text-gray-600" />
-                </button>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card>
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
+                <div className="relative">
+                  <Avatar className="size-20 sm:size-24">
+                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-xl sm:text-2xl">
+                      {getInitials(profileData.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 sm:p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <Camera className="size-3 sm:size-4 text-gray-600" />
+                  </button>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg sm:text-xl text-gray-900 font-medium">{profileData.name}</h2>
+                  <p className="text-sm sm:text-base text-gray-600">{profileData.email}</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h2 className="text-gray-900">{profileData.name}</h2>
-                <p className="text-gray-600">{profileData.email}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Tabs */}
-        <Tabs defaultValue="personal" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="personal">Informações Pessoais</TabsTrigger>
-            <TabsTrigger value="account">Conta</TabsTrigger>
-            <TabsTrigger value="security">Segurança</TabsTrigger>
+        <Tabs defaultValue="personal" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="personal" className="text-xs sm:text-sm py-2 sm:py-2.5">
+              <span className="hidden sm:inline">Informações </span>Pessoais
+            </TabsTrigger>
+            <TabsTrigger value="account" className="text-xs sm:text-sm py-2 sm:py-2.5">Conta</TabsTrigger>
+            <TabsTrigger value="security" className="text-xs sm:text-sm py-2 sm:py-2.5">Segurança</TabsTrigger>
           </TabsList>
 
           {/* Informações Pessoais */}

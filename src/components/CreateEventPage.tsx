@@ -16,10 +16,15 @@ import {
   Save,
   Tag,
   AlertCircle,
-  Palette
+  Palette,
+  Home,
+  ChevronRight,
+  Plus,
+  ArrowLeft
 } from 'lucide-react';
 import { Event } from '../lib/types';
 import { eventTypes, eventCategories, repeatOptions } from '../lib/mock-data';
+import { motion } from 'motion/react';
 
 interface CreateEventPageProps {
   onSave: (event: Omit<Event, 'id'>) => void;
@@ -70,14 +75,45 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 p-6 overflow-auto">
+    <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto h-full">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-gray-900">Criar Novo Evento</h1>
-          <p className="text-gray-600">Preencha as informações do seu evento</p>
-        </div>
+        {/* Breadcrumb */}
+        <motion.nav
+          className="flex items-center gap-2 text-sm text-gray-500 mb-4"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <Home className="size-4" />
+          <ChevronRight className="size-3" />
+          <span className="text-gray-600">Dashboard</span>
+          <ChevronRight className="size-3" />
+          <span className="text-gray-900 font-medium">Criar Evento</span>
+        </motion.nav>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <motion.div 
+          className="mb-4 sm:mb-6"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <motion.button
+              onClick={onCancel}
+              className="p-2 rounded-lg hover:bg-gray-200 transition-colors lg:hidden"
+              whileTap={{ scale: 0.95 }}
+            >
+              <ArrowLeft className="size-5 text-gray-600" />
+            </motion.button>
+            <div className="flex items-center gap-2">
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 rounded-xl">
+                <Plus className="size-5 text-white" />
+              </div>
+              <h1 className="text-xl sm:text-2xl text-gray-900 font-semibold">Criar Novo Evento</h1>
+            </div>
+          </div>
+          <p className="text-sm sm:text-base text-gray-600 ml-0 lg:ml-11">Preencha as informações do seu evento</p>
+        </motion.div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Informações Básicas */}
           <Card>
             <CardHeader>
@@ -330,15 +366,19 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
           </Card>
 
           {/* Botões de Ação */}
-          <div className="flex gap-3">
-            <Button type="submit" className="flex-1 gap-2">
+          <motion.div 
+            className="flex flex-col-reverse sm:flex-row gap-3 sticky bottom-0 bg-gray-50 py-4 -mx-3 px-3 sm:mx-0 sm:px-0 sm:relative border-t sm:border-t-0 border-gray-200"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Button type="button" variant="outline" onClick={onCancel} className="sm:w-auto">
+              Cancelar
+            </Button>
+            <Button type="submit" className="flex-1 sm:flex-none gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
               <Save className="size-4" />
               Salvar Evento
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancelar
-            </Button>
-          </div>
+          </motion.div>
         </form>
       </div>
     </div>

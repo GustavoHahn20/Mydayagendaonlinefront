@@ -24,7 +24,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-3 sm:p-4 relative overflow-hidden safe-area-pt safe-area-pb">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
@@ -72,16 +72,16 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         transition={{ duration: 0.5 }}
       >
         <motion.div
-          className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20"
+          className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 border border-white/20"
           whileHover={{ boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15)" }}
         >
-          <div className="flex flex-col items-center mb-8">
+          <div className="flex flex-col items-center mb-6 sm:mb-8">
             <motion.div
-              className="relative mb-4"
+              className="relative mb-3 sm:mb-4"
               whileHover={{ scale: 1.05 }}
             >
-              <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl p-5 shadow-2xl relative">
-                <Calendar className="size-10 text-white" />
+              <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl relative">
+                <Calendar className="size-8 sm:size-10 text-white" />
                 <motion.div
                   className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1.5"
                   animate={{
@@ -105,7 +105,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h1 className="text-gray-900 mb-1 tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl text-gray-900 mb-1 tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent font-bold">
                 MyDay
               </h1>
               <motion.div
@@ -224,30 +224,30 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
           {/* Feature highlights */}
           <motion.div
-            className="mt-8 pt-6 border-t border-gray-200"
+            className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
           >
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
               <div className="space-y-1">
-                <div className="text-2xl">✨</div>
-                <p className="text-xs text-gray-600">Personalizável</p>
+                <div className="text-xl sm:text-2xl">✨</div>
+                <p className="text-[10px] sm:text-xs text-gray-600">Personalizável</p>
               </div>
               <div className="space-y-1">
-                <div className="text-2xl">🚀</div>
-                <p className="text-xs text-gray-600">Moderno</p>
+                <div className="text-xl sm:text-2xl">🚀</div>
+                <p className="text-[10px] sm:text-xs text-gray-600">Moderno</p>
               </div>
               <div className="space-y-1">
-                <div className="text-2xl">💪</div>
-                <p className="text-xs text-gray-600">Poderoso</p>
+                <div className="text-xl sm:text-2xl">💪</div>
+                <p className="text-[10px] sm:text-xs text-gray-600">Poderoso</p>
               </div>
             </div>
           </motion.div>
         </motion.div>
 
         <motion.p
-          className="text-center text-sm text-gray-600 mt-6"
+          className="text-center text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1 }}

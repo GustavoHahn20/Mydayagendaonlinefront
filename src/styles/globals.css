@@ -187,3 +187,58 @@
 html {
   font-size: var(--font-size);
 }
+
+/* Safe area para dispositivos com notch */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* Melhorias de scroll */
+.overflow-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Esconder scrollbar mas manter funcionalidade */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Animação suave para transições de página */
+@media (prefers-reduced-motion: no-preference) {
+  .page-transition {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+}
+
+/* Melhorar toque em dispositivos móveis */
+@media (hover: none) and (pointer: coarse) {
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+}
+
+/* Responsividade de texto */
+@media (max-width: 640px) {
+  :root {
+    --font-size: 14px;
+  }
+}
+
+/* Focus visible melhorado */
+:focus-visible {
+  outline: 2px solid var(--color-indigo-500);
+  outline-offset: 2px;
+}

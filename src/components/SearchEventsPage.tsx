@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -13,10 +13,14 @@ import {
   AlertCircle,
   MapPin,
   Clock,
-  X
+  X,
+  Home,
+  ChevronRight,
+  SlidersHorizontal
 } from 'lucide-react';
 import { Event } from '../lib/types';
 import { eventTypes, eventCategories } from '../lib/mock-data';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface SearchEventsPageProps {
   events: Event[];
@@ -33,7 +37,20 @@ export function SearchEventsPage({ events, onEventClick }: SearchEventsPageProps
     endDate: '',
   });
 
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // No desktop, mostrar filtros por padrão
+      if (!mobile) setShowFilters(true);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const updateFilter = (field: string, value: string) => {
     setFilters({ ...filters, [field]: value });
@@ -114,216 +131,262 @@ export function SearchEventsPage({ events, onEventClick }: SearchEventsPageProps
   ).length;
 
   return (
-    <div className="flex-1 bg-gray-50 p-6 overflow-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto h-full">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
+        {/* Breadcrumb */}
+        <motion.nav
+          className="flex items-center gap-2 text-sm text-gray-500"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <Home className="size-4" />
+          <ChevronRight className="size-3" />
+          <span className="text-gray-900 font-medium">Buscar Eventos</span>
+        </motion.nav>
+
         {/* Header */}
-        <div>
-          <h1 className="text-gray-900">Buscar Eventos</h1>
-          <p className="text-gray-600">Encontre eventos usando filtros avançados</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <Search className="size-5 sm:size-6 text-indigo-600" />
+            <h1 className="text-xl sm:text-2xl text-gray-900 font-semibold">Buscar Eventos</h1>
+          </div>
+          <p className="text-sm sm:text-base text-gray-600">Encontre eventos usando filtros avançados</p>
+        </motion.div>
 
         {/* Barra de Busca */}
-        <div className="flex gap-3">
+        <motion.div 
+          className="flex flex-col sm:flex-row gap-2 sm:gap-3"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 sm:size-5 text-gray-400" />
             <Input
               type="text"
-              placeholder="Buscar por título, descrição, localização..."
+              placeholder={isMobile ? "Buscar eventos..." : "Buscar por título, descrição, localização..."}
               value={filters.searchTerm}
               onChange={(e) => updateFilter('searchTerm', e.target.value)}
-              className="pl-10"
+              className="pl-9 sm:pl-10 text-sm sm:text-base"
             />
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-            className="gap-2"
-          >
-            <Filter className="size-4" />
-            Filtros
-            {activeFiltersCount > 0 && (
-              <Badge variant="secondary" className="ml-1">
-                {activeFiltersCount}
-              </Badge>
-            )}
-          </Button>
-          {activeFiltersCount > 0 && (
-            <Button variant="outline" onClick={clearFilters} className="gap-2">
-              <X className="size-4" />
-              Limpar
+          <div className="flex gap-2">
+            <Button
+              variant={showFilters ? "default" : "outline"}
+              onClick={() => setShowFilters(!showFilters)}
+              className={`gap-2 flex-1 sm:flex-none ${showFilters ? 'bg-indigo-600 hover:bg-indigo-700' : ''}`}
+            >
+              <SlidersHorizontal className="size-4" />
+              <span className="sm:inline">Filtros</span>
+              {activeFiltersCount > 0 && (
+                <Badge variant={showFilters ? "outline" : "secondary"} className={`ml-1 ${showFilters ? 'bg-white text-indigo-600' : ''}`}>
+                  {activeFiltersCount}
+                </Badge>
+              )}
             </Button>
-          )}
-        </div>
+            {activeFiltersCount > 0 && (
+              <Button variant="outline" onClick={clearFilters} className="gap-2 px-3">
+                <X className="size-4" />
+                <span className="hidden sm:inline">Limpar</span>
+              </Button>
+            )}
+          </div>
+        </motion.div>
 
         {/* Painel de Filtros */}
-        {showFilters && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="filter-type" className="flex items-center gap-2">
-                    <Tag className="size-4" />
-                    Tipo de Evento
-                  </Label>
-                  <Select value={filters.type} onValueChange={(value) => updateFilter('type', value)}>
-                    <SelectTrigger id="filter-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os tipos</SelectItem>
-                      {eventTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.name}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Card className="overflow-hidden">
+                <CardContent className="pt-4 sm:pt-6 pb-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label htmlFor="filter-type" className="flex items-center gap-2 text-xs sm:text-sm">
+                        <Tag className="size-3 sm:size-4" />
+                        Tipo
+                      </Label>
+                      <Select value={filters.type} onValueChange={(value) => updateFilter('type', value)}>
+                        <SelectTrigger id="filter-type" className="text-xs sm:text-sm h-9 sm:h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          {eventTypes.map((type) => (
+                            <SelectItem key={type.id} value={type.name}>{type.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="filter-category">Categoria</Label>
-                  <Select value={filters.category} onValueChange={(value) => updateFilter('category', value)}>
-                    <SelectTrigger id="filter-category">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas as categorias</SelectItem>
-                      {eventCategories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.name}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label htmlFor="filter-category" className="text-xs sm:text-sm">Categoria</Label>
+                      <Select value={filters.category} onValueChange={(value) => updateFilter('category', value)}>
+                        <SelectTrigger id="filter-category" className="text-xs sm:text-sm h-9 sm:h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas</SelectItem>
+                          {eventCategories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="filter-priority" className="flex items-center gap-2">
-                    <AlertCircle className="size-4" />
-                    Prioridade
-                  </Label>
-                  <Select value={filters.priority} onValueChange={(value) => updateFilter('priority', value)}>
-                    <SelectTrigger id="filter-priority">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas as prioridades</SelectItem>
-                      <SelectItem value="low">Baixa</SelectItem>
-                      <SelectItem value="medium">Média</SelectItem>
-                      <SelectItem value="high">Alta</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label htmlFor="filter-priority" className="flex items-center gap-2 text-xs sm:text-sm">
+                        <AlertCircle className="size-3 sm:size-4" />
+                        Prioridade
+                      </Label>
+                      <Select value={filters.priority} onValueChange={(value) => updateFilter('priority', value)}>
+                        <SelectTrigger id="filter-priority" className="text-xs sm:text-sm h-9 sm:h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas</SelectItem>
+                          <SelectItem value="low">Baixa</SelectItem>
+                          <SelectItem value="medium">Média</SelectItem>
+                          <SelectItem value="high">Alta</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="filter-start-date" className="flex items-center gap-2">
-                    <Calendar className="size-4" />
-                    Data Inicial
-                  </Label>
-                  <Input
-                    id="filter-start-date"
-                    type="date"
-                    value={filters.startDate}
-                    onChange={(e) => updateFilter('startDate', e.target.value)}
-                  />
-                </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label htmlFor="filter-start-date" className="flex items-center gap-2 text-xs sm:text-sm">
+                        <Calendar className="size-3 sm:size-4" />
+                        De
+                      </Label>
+                      <Input
+                        id="filter-start-date"
+                        type="date"
+                        value={filters.startDate}
+                        onChange={(e) => updateFilter('startDate', e.target.value)}
+                        className="text-xs sm:text-sm h-9 sm:h-10"
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="filter-end-date">Data Final</Label>
-                  <Input
-                    id="filter-end-date"
-                    type="date"
-                    value={filters.endDate}
-                    onChange={(e) => updateFilter('endDate', e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label htmlFor="filter-end-date" className="text-xs sm:text-sm">Até</Label>
+                      <Input
+                        id="filter-end-date"
+                        type="date"
+                        value={filters.endDate}
+                        onChange={(e) => updateFilter('endDate', e.target.value)}
+                        className="text-xs sm:text-sm h-9 sm:h-10"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Resultados */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-gray-900">
-              Resultados ({filteredEvents.length})
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-sm sm:text-base text-gray-900 font-medium">
+              {filteredEvents.length} {filteredEvents.length === 1 ? 'resultado' : 'resultados'}
             </h2>
           </div>
 
           {filteredEvents.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4">
-              {filteredEvents.map((event) => (
-                <Card
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
+              {filteredEvents.map((event, index) => (
+                <motion.div
                   key={event.id}
-                  className="hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => onEventClick(event)}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div
-                        className="size-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: event.color }}
-                      >
-                        <Calendar className="size-6 text-white" />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <div className="flex-1">
-                            <h3 className="text-gray-900 mb-1">{event.title}</h3>
-                            <p className="text-sm text-gray-600 line-clamp-2">
-                              {event.description}
-                            </p>
-                          </div>
-                          <Badge className={priorityColors[event.priority]}>
-                            {priorityLabels[event.priority]}
-                          </Badge>
+                  <Card
+                    className="hover:shadow-md transition-all cursor-pointer active:scale-[0.99]"
+                    onClick={() => onEventClick(event)}
+                  >
+                    <CardContent className="p-3 sm:p-4 md:p-6">
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <div
+                          className="size-10 sm:size-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: event.color }}
+                        >
+                          <Calendar className="size-5 sm:size-6 text-white" />
                         </div>
 
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-600 mt-3">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="size-4" />
-                            {event.startDate.toLocaleDateString('pt-BR')}
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Clock className="size-4" />
-                            {event.startTime} - {event.endTime}
-                          </div>
-                          {event.location && (
-                            <div className="flex items-center gap-1.5">
-                              <MapPin className="size-4" />
-                              {event.location}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 sm:gap-4 mb-1 sm:mb-2">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-sm sm:text-base text-gray-900 font-medium truncate">{event.title}</h3>
+                              <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 sm:line-clamp-2">
+                                {event.description}
+                              </p>
                             </div>
-                          )}
-                        </div>
+                            <Badge className={`${priorityColors[event.priority]} text-[10px] sm:text-xs px-1.5 sm:px-2 flex-shrink-0`}>
+                              {isMobile ? (event.priority === 'high' ? '🔴' : event.priority === 'medium' ? '🟡' : '🟢') : priorityLabels[event.priority]}
+                            </Badge>
+                          </div>
 
-                        <div className="flex gap-2 mt-3">
-                          <Badge
-                            variant="secondary"
-                            style={{ backgroundColor: event.color, color: 'white' }}
-                          >
-                            {event.type}
-                          </Badge>
-                          <Badge variant="outline">{event.category}</Badge>
+                          <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3">
+                            <div className="flex items-center gap-1 sm:gap-1.5">
+                              <Calendar className="size-3 sm:size-4" />
+                              {event.startDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                            </div>
+                            <div className="flex items-center gap-1 sm:gap-1.5">
+                              <Clock className="size-3 sm:size-4" />
+                              {event.startTime}
+                            </div>
+                            {event.location && !isMobile && (
+                              <div className="flex items-center gap-1 sm:gap-1.5">
+                                <MapPin className="size-3 sm:size-4" />
+                                <span className="truncate max-w-[150px]">{event.location}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex gap-1.5 sm:gap-2 mt-2 sm:mt-3">
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] sm:text-xs"
+                              style={{ backgroundColor: event.color, color: 'white' }}
+                            >
+                              {event.type}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px] sm:text-xs">{event.category}</Badge>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
             </div>
           ) : (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Search className="size-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-gray-900 mb-2">Nenhum evento encontrado</h3>
-                <p className="text-gray-600">
-                  Tente ajustar os filtros ou fazer uma nova busca
-                </p>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <Card>
+                <CardContent className="p-8 sm:p-12 text-center">
+                  <Search className="size-10 sm:size-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                  <h3 className="text-sm sm:text-base text-gray-900 mb-2 font-medium">Nenhum evento encontrado</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Tente ajustar os filtros ou fazer uma nova busca
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -14,10 +14,13 @@ import {
   Edit2, 
   Trash2,
   Save,
-  X
+  X,
+  Home,
+  ChevronRight
 } from 'lucide-react';
 import { EventType, EventCategory, RepeatOption } from '../lib/types';
 import { eventTypes as initialEventTypes, eventCategories as initialEventCategories, repeatOptions as initialRepeatOptions } from '../lib/mock-data';
+import { motion } from 'motion/react';
 
 interface SettingsPageProps {
   onUpdateSettings: (settings: any) => void;
@@ -119,21 +122,38 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 p-6 overflow-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto h-full">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
+        {/* Breadcrumb */}
+        <motion.nav
+          className="flex items-center gap-2 text-sm text-gray-500"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <Home className="size-4" />
+          <ChevronRight className="size-3" />
+          <span className="text-gray-900 font-medium">Configurações</span>
+        </motion.nav>
+
         {/* Header */}
-        <div>
-          <h1 className="text-gray-900">Configurações</h1>
-          <p className="text-gray-600">Personalize sua experiência com a agenda</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <SettingsIcon className="size-5 sm:size-6 text-indigo-600" />
+            <h1 className="text-xl sm:text-2xl text-gray-900 font-semibold">Configurações</h1>
+          </div>
+          <p className="text-sm sm:text-base text-gray-600">Personalize sua experiência com a agenda</p>
+        </motion.div>
 
         {/* Tabs */}
-        <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="general">Geral</TabsTrigger>
-            <TabsTrigger value="types">Tipos de Evento</TabsTrigger>
-            <TabsTrigger value="categories">Categorias</TabsTrigger>
-            <TabsTrigger value="repeat">Repetições</TabsTrigger>
+        <Tabs defaultValue="general" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-1">
+            <TabsTrigger value="general" className="text-xs sm:text-sm py-2">Geral</TabsTrigger>
+            <TabsTrigger value="types" className="text-xs sm:text-sm py-2">Tipos</TabsTrigger>
+            <TabsTrigger value="categories" className="text-xs sm:text-sm py-2">Categorias</TabsTrigger>
+            <TabsTrigger value="repeat" className="text-xs sm:text-sm py-2">Repetições</TabsTrigger>
           </TabsList>
 
           {/* Configurações Gerais */}
