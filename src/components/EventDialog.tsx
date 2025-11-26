@@ -289,8 +289,8 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
                   {isEditing ? (
                     <Input
                       type="date"
-                      value={displayEvent.startDate.toISOString().split('T')[0]}
-                      onChange={(e) => updateField('startDate', new Date(e.target.value))}
+                      value={`${displayEvent.startDate.getFullYear()}-${String(displayEvent.startDate.getMonth() + 1).padStart(2, '0')}-${String(displayEvent.startDate.getDate()).padStart(2, '0')}`}
+                      onChange={(e) => updateField('startDate', new Date(e.target.value + 'T00:00:00'))}
                       className="transition-all focus:ring-2 focus:ring-blue-500"
                     />
                   ) : (
@@ -308,8 +308,8 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
                   {isEditing ? (
                     <Input
                       type="date"
-                      value={displayEvent.endDate.toISOString().split('T')[0]}
-                      onChange={(e) => updateField('endDate', new Date(e.target.value))}
+                      value={`${displayEvent.endDate.getFullYear()}-${String(displayEvent.endDate.getMonth() + 1).padStart(2, '0')}-${String(displayEvent.endDate.getDate()).padStart(2, '0')}`}
+                      onChange={(e) => updateField('endDate', new Date(e.target.value + 'T00:00:00'))}
                       className="transition-all focus:ring-2 focus:ring-blue-500"
                     />
                   ) : (

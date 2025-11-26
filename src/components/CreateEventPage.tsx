@@ -135,10 +135,11 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Criar datas preservando o fuso horário local (adiciona T00:00:00 para evitar conversão UTC)
     const newEvent: Omit<Event, 'id'> = {
       ...formData,
-      startDate: new Date(formData.startDate),
-      endDate: new Date(formData.endDate),
+      startDate: new Date(formData.startDate + 'T00:00:00'),
+      endDate: new Date(formData.endDate + 'T00:00:00'),
     };
     
     onSave(newEvent);

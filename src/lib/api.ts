@@ -495,13 +495,27 @@ export const settingsApi = {
 // ==================== HELPERS ====================
 
 // Converter evento da API para o formato do frontend
+// Helper para criar data a partir de string preservando o fuso horário local
+function parseDateLocal(dateStr: string): Date {
+  // Se a data vier no formato YYYY-MM-DD, adiciona T00:00:00 para evitar conversão UTC
+  if (dateStr && dateStr.length === 10) {
+    return new Date(dateStr + 'T00:00:00');
+  }
+  // Se vier com horário (ISO), tenta extrair apenas a data
+  if (dateStr && dateStr.includes('T')) {
+    const datePart = dateStr.split('T')[0];
+    return new Date(datePart + 'T00:00:00');
+  }
+  return new Date(dateStr);
+}
+
 export function apiEventToLocal(event: EventAPI): import('./types').Event {
   return {
     id: event.id,
     title: event.title,
     description: event.description || '',
-    startDate: new Date(event.startDate),
-    endDate: new Date(event.endDate),
+    startDate: parseDateLocal(event.startDate),
+    endDate: parseDateLocal(event.endDate),
     startTime: event.startTime,
     endTime: event.endTime,
     type: event.type,
@@ -516,13 +530,21 @@ export function apiEventToLocal(event: EventAPI): import('./types').Event {
   };
 }
 
+// Helper para formatar data no formato YYYY-MM-DD preservando o fuso horário local
+function formatDateLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Converter evento do frontend para o formato da API
 export function localEventToApi(event: import('./types').Event): CreateEventRequest {
   return {
     title: event.title,
     description: event.description,
-    startDate: event.startDate.toISOString().split('T')[0],
-    endDate: event.endDate.toISOString().split('T')[0],
+    startDate: formatDateLocal(event.startDate),
+    endDate: formatDateLocal(event.endDate),
     startTime: event.startTime,
     endTime: event.endTime,
     type: event.type,
