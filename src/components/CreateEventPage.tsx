@@ -75,8 +75,8 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto h-full">
-      <div className="max-w-4xl mx-auto">
+    <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto">
+      <div className="max-w-4xl mx-auto pb-6">
         {/* Breadcrumb */}
         <motion.nav
           className="flex items-center gap-2 text-sm text-gray-500 mb-4"
@@ -367,7 +367,7 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
 
           {/* Botões de Ação */}
           <motion.div 
-            className="flex flex-col-reverse sm:flex-row gap-3 sticky bottom-0 bg-gray-50 py-4 -mx-3 px-3 sm:mx-0 sm:px-0 sm:relative border-t sm:border-t-0 border-gray-200"
+            className="flex flex-col-reverse sm:flex-row gap-3 pt-2"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >

@@ -29,7 +29,9 @@ import {
   X,
   Tag,
   AlertCircle,
-  Trash2
+  Trash2,
+  Palette,
+  CalendarCheck
 } from 'lucide-react';
 import { Event } from '../lib/types';
 import { eventTypes, eventCategories, repeatOptions } from '../lib/mock-data';
@@ -235,61 +237,118 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
 
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
-                    <Clock className="size-4 text-orange-600" />
-                    Horário
+                    <CalendarCheck className="size-4 text-green-600" />
+                    Data de Término
                   </Label>
                   {isEditing ? (
-                    <div className="flex gap-2">
-                      <Input
-                        type="time"
-                        value={displayEvent.startTime}
-                        onChange={(e) => updateField('startTime', e.target.value)}
-                        className="transition-all focus:ring-2 focus:ring-blue-500"
-                      />
-                      <Input
-                        type="time"
-                        value={displayEvent.endTime}
-                        onChange={(e) => updateField('endTime', e.target.value)}
-                        className="transition-all focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
+                    <Input
+                      type="date"
+                      value={displayEvent.endDate.toISOString().split('T')[0]}
+                      onChange={(e) => updateField('endDate', new Date(e.target.value))}
+                      className="transition-all focus:ring-2 focus:ring-blue-500"
+                    />
                   ) : (
                     <p className="text-gray-700">
-                      {displayEvent.startTime} - {displayEvent.endTime}
+                      {displayEvent.endDate.toLocaleDateString('pt-BR')}
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Prioridade */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <AlertCircle className="size-4 text-red-600" />
-                  Prioridade
-                </Label>
-                {isEditing ? (
-                  <Select
-                    value={displayEvent.priority}
-                    onValueChange={(value) => updateField('priority', value as 'low' | 'medium' | 'high')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">🟢 Baixa</SelectItem>
-                      <SelectItem value="medium">🟡 Média</SelectItem>
-                      <SelectItem value="high">🔴 Alta</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Badge className={priorityColors[displayEvent.priority]}>
-                    {priorityLabels[displayEvent.priority]}
-                  </Badge>
-                )}
+              {/* Horário */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Clock className="size-4 text-orange-600" />
+                    Hora de Início
+                  </Label>
+                  {isEditing ? (
+                    <Input
+                      type="time"
+                      value={displayEvent.startTime}
+                      onChange={(e) => updateField('startTime', e.target.value)}
+                      className="transition-all focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <p className="text-gray-700">{displayEvent.startTime}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Clock className="size-4 text-orange-600" />
+                    Hora de Término
+                  </Label>
+                  {isEditing ? (
+                    <Input
+                      type="time"
+                      value={displayEvent.endTime}
+                      onChange={(e) => updateField('endTime', e.target.value)}
+                      className="transition-all focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <p className="text-gray-700">{displayEvent.endTime}</p>
+                  )}
+                </div>
               </div>
 
-              {/* Localização */}
-              {(displayEvent.location || isEditing) && (
+              {/* Prioridade e Cor */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <AlertCircle className="size-4 text-red-600" />
+                    Prioridade
+                  </Label>
+                  {isEditing ? (
+                    <Select
+                      value={displayEvent.priority}
+                      onValueChange={(value) => updateField('priority', value as 'low' | 'medium' | 'high')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">🟢 Baixa</SelectItem>
+                        <SelectItem value="medium">🟡 Média</SelectItem>
+                        <SelectItem value="high">🔴 Alta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge className={priorityColors[displayEvent.priority]}>
+                      {priorityLabels[displayEvent.priority]}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Palette className="size-4 text-pink-600" />
+                    Cor do Evento
+                  </Label>
+                  {isEditing ? (
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="color"
+                        value={displayEvent.color}
+                        onChange={(e) => updateField('color', e.target.value)}
+                        className="w-20 h-10"
+                      />
+                      <span className="text-sm text-gray-600">{displayEvent.color}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="size-6 rounded-full border border-gray-300 shadow-sm"
+                        style={{ backgroundColor: displayEvent.color }}
+                      />
+                      <span className="text-gray-700">{displayEvent.color}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Localização e Participantes */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <MapPin className="size-4 text-purple-600" />
@@ -303,13 +362,12 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
                       className="transition-all focus:ring-2 focus:ring-blue-500"
                     />
                   ) : (
-                    <p className="text-gray-700">{displayEvent.location}</p>
+                    <p className="text-gray-700">
+                      {displayEvent.location || <span className="text-gray-400 italic">Não informado</span>}
+                    </p>
                   )}
                 </div>
-              )}
 
-              {/* Participantes */}
-              {(displayEvent.participants || isEditing) && (
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Users className="size-4 text-indigo-600" />
@@ -323,42 +381,44 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
                       className="transition-all focus:ring-2 focus:ring-blue-500"
                     />
                   ) : (
-                    <p className="text-gray-700">{displayEvent.participants}</p>
+                    <p className="text-gray-700">
+                      {displayEvent.participants || <span className="text-gray-400 italic">Não informado</span>}
+                    </p>
                   )}
                 </div>
-              )}
-
-              {/* Repetição */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Repeat className="size-4 text-teal-600" />
-                  Repetir
-                </Label>
-                {isEditing ? (
-                  <Select
-                    value={displayEvent.repeat}
-                    onValueChange={(value) => updateField('repeat', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {repeatOptions.map((option) => (
-                        <SelectItem key={option.id} value={option.value}>
-                          {option.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-gray-700">
-                    {repeatOptions.find((opt) => opt.value === displayEvent.repeat)?.name}
-                  </p>
-                )}
               </div>
 
-              {/* Lembrete */}
-              {(displayEvent.reminder || isEditing) && (
+              {/* Repetição e Lembrete */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Repeat className="size-4 text-teal-600" />
+                    Repetir
+                  </Label>
+                  {isEditing ? (
+                    <Select
+                      value={displayEvent.repeat || 'none'}
+                      onValueChange={(value) => updateField('repeat', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {repeatOptions.map((option) => (
+                          <SelectItem key={option.id} value={option.value}>
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-gray-700">
+                      {repeatOptions.find((opt) => opt.value === displayEvent.repeat)?.name || 
+                        <span className="text-gray-400 italic">Não se repete</span>}
+                    </p>
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Bell className="size-4 text-yellow-600" />
@@ -382,10 +442,22 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-gray-700">{displayEvent.reminder}</p>
+                    <p className="text-gray-700">
+                      {displayEvent.reminder ? (
+                        displayEvent.reminder === 'none' ? 'Nenhum' :
+                        displayEvent.reminder === '15min' ? '15 minutos antes' :
+                        displayEvent.reminder === '30min' ? '30 minutos antes' :
+                        displayEvent.reminder === '1hour' ? '1 hora antes' :
+                        displayEvent.reminder === '2hours' ? '2 horas antes' :
+                        displayEvent.reminder === '1day' ? '1 dia antes' :
+                        displayEvent.reminder
+                      ) : (
+                        <span className="text-gray-400 italic">Nenhum</span>
+                      )}
+                    </p>
                   )}
                 </div>
-              )}
+              </div>
 
               {/* Descrição */}
               <div className="space-y-2">
@@ -406,22 +478,22 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
               </div>
 
               {/* Notas */}
-              {(displayEvent.notes || isEditing) && (
-                <div className="space-y-2">
-                  <Label>Notas Adicionais</Label>
-                  {isEditing ? (
-                    <Textarea
-                      value={displayEvent.notes || ''}
-                      onChange={(e) => updateField('notes', e.target.value)}
-                      placeholder="Adicionar notas"
-                      rows={2}
-                      className="transition-all focus:ring-2 focus:ring-blue-500"
-                    />
-                  ) : (
-                    <p className="text-gray-700 whitespace-pre-wrap">{displayEvent.notes}</p>
-                  )}
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label>Notas Adicionais</Label>
+                {isEditing ? (
+                  <Textarea
+                    value={displayEvent.notes || ''}
+                    onChange={(e) => updateField('notes', e.target.value)}
+                    placeholder="Adicionar notas"
+                    rows={2}
+                    className="transition-all focus:ring-2 focus:ring-blue-500"
+                  />
+                ) : (
+                  <p className="text-gray-700 whitespace-pre-wrap">
+                    {displayEvent.notes || <span className="text-gray-400 italic">Nenhuma nota adicionada</span>}
+                  </p>
+                )}
+              </div>
 
               {/* Botões de Ação */}
               {isEditing && (
