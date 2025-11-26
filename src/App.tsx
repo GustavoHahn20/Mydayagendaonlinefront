@@ -9,7 +9,7 @@ import { SettingsPage } from './components/SettingsPage';
 import { EventDialog } from './components/EventDialog';
 import { Event } from './lib/types';
 import { mockEvents, mockUser } from './lib/mock-data';
-import { Toaster, toast } from 'sonner@2.0.3';
+import { Toaster, toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 
 type Page = 'dashboard' | 'create' | 'search' | 'profile' | 'settings';
