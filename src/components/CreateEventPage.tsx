@@ -75,7 +75,7 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto">
+    <div className="h-full min-h-0 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-y-auto">
       <div className="max-w-4xl mx-auto pb-6">
         {/* Breadcrumb */}
         <motion.nav
