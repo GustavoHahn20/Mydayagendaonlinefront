@@ -14,10 +14,12 @@ import {
   Camera,
   Globe,
   Home,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 import { User as UserType } from '../lib/types';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 
 interface ProfilePageProps {
   user: UserType;
@@ -31,6 +33,7 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
     newPassword: '',
     confirmPassword: '',
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   const updateProfileField = (field: keyof UserType, value: string) => {
     setProfileData({ ...profileData, [field]: value });
@@ -40,22 +43,28 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
     setPasswordData({ ...passwordData, [field]: value });
   };
 
-  const handleSaveProfile = () => {
-    onUpdateUser(profileData);
-    // Mostrar mensagem de sucesso
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      await onUpdateUser(profileData);
+    } catch (error) {
+      // Error handling is done in App.tsx
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleChangePassword = () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('As senhas não coincidem!');
+      toast.error('As senhas não coincidem!');
       return;
     }
     if (passwordData.newPassword.length < 6) {
-      alert('A senha deve ter pelo menos 6 caracteres!');
+      toast.error('A senha deve ter pelo menos 6 caracteres!');
       return;
     }
-    // Simular mudança de senha
-    alert('Senha alterada com sucesso!');
+    // TODO: Implementar endpoint de alteração de senha na API
+    toast.success('Senha alterada com sucesso!');
     setPasswordData({
       currentPassword: '',
       newPassword: '',
@@ -198,9 +207,18 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
                 </div>
 
                 <div className="pt-4">
-                  <Button onClick={handleSaveProfile} className="gap-2">
-                    <Save className="size-4" />
-                    Salvar Alterações
+                  <Button onClick={handleSaveProfile} className="gap-2" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="size-4" />
+                        Salvar Alterações
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>

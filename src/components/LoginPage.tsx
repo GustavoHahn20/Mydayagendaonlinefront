@@ -3,24 +3,75 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
-import { Calendar, Lock, Mail, Sparkles, ArrowRight, Zap } from 'lucide-react';
+import { Calendar, Lock, Mail, Sparkles, ArrowRight, Zap, User, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { authApi, AuthResponse } from '../lib/api';
 
 interface LoginPageProps {
-  onLogin: () => void;
+  onLogin: (user: AuthResponse['user']) => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
+  const [isRegister, setIsRegister] = useState(false);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulação de login
-    if (email && password) {
-      onLogin();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      if (isRegister) {
+        // Validações para registro
+        if (!name.trim()) {
+          setError('Por favor, informe seu nome');
+          setIsLoading(false);
+          return;
+        }
+        if (password !== confirmPassword) {
+          setError('As senhas não coincidem');
+          setIsLoading(false);
+          return;
+        }
+        if (password.length < 6) {
+          setError('A senha deve ter pelo menos 6 caracteres');
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await authApi.register({ name, email, password });
+        onLogin(response.user);
+      } else {
+        // Login
+        const response = await authApi.login({ email, password });
+        onLogin(response.user);
+      }
+    } catch (err: any) {
+      console.error('Auth error:', err);
+      if (err.status === 401) {
+        setError('E-mail ou senha incorretos');
+      } else if (err.status === 409) {
+        setError('Este e-mail já está cadastrado');
+      } else {
+        setError(err.message || 'Erro ao conectar com o servidor');
+      }
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const toggleMode = () => {
+    setIsRegister(!isRegister);
+    setError('');
+    setName('');
+    setPassword('');
+    setConfirmPassword('');
   };
 
   return (
@@ -126,12 +177,48 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
               >
-                Seu dia, suas regras. Organize com estilo.
+                {isRegister ? 'Crie sua conta e comece a organizar' : 'Seu dia, suas regras. Organize com estilo.'}
               </motion.p>
             </motion.div>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center"
+            >
+              {error}
+            </motion.div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Name field (only for register) */}
+            {isRegister && (
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <Label htmlFor="name">Nome completo</Label>
+                <div className="relative group">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Seu nome completo"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="pl-10 transition-all focus:ring-2 focus:ring-indigo-500 border-gray-200 focus:border-indigo-500"
+                    required={isRegister}
+                    disabled={isLoading}
+                  />
+                </div>
+              </motion.div>
+            )}
+
             <motion.div
               className="space-y-2"
               initial={{ opacity: 0, x: -20 }}
@@ -149,6 +236,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 transition-all focus:ring-2 focus:ring-indigo-500 border-gray-200 focus:border-indigo-500"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </motion.div>
@@ -170,28 +258,57 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 transition-all focus:ring-2 focus:ring-indigo-500 border-gray-200 focus:border-indigo-500"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </motion.div>
 
-            <motion.div
-              className="flex items-center justify-between"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-            >
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <Checkbox
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                  className="border-gray-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
-                />
-                <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Lembrar-me</span>
-              </label>
-              <a href="#" className="text-sm text-indigo-600 hover:text-indigo-700 hover:underline transition-colors">
-                Esqueceu a senha?
-              </a>
-            </motion.div>
+            {/* Confirm password (only for register) */}
+            {isRegister && (
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <Label htmlFor="confirmPassword">Confirmar senha</Label>
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 transition-all focus:ring-2 focus:ring-indigo-500 border-gray-200 focus:border-indigo-500"
+                    required={isRegister}
+                    disabled={isLoading}
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {!isRegister && (
+              <motion.div
+                className="flex items-center justify-between"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+              >
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <Checkbox
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    className="border-gray-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                    disabled={isLoading}
+                  />
+                  <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Lembrar-me</span>
+                </label>
+                <a href="#" className="text-sm text-indigo-600 hover:text-indigo-700 hover:underline transition-colors">
+                  Esqueceu a senha?
+                </a>
+              </motion.div>
+            )}
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -201,9 +318,19 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all text-white group"
+                disabled={isLoading}
               >
-                Entrar no MyDay
-                <ArrowRight className="size-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                {isLoading ? (
+                  <>
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                    {isRegister ? 'Criando conta...' : 'Entrando...'}
+                  </>
+                ) : (
+                  <>
+                    {isRegister ? 'Criar conta' : 'Entrar no MyDay'}
+                    <ArrowRight className="size-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </Button>
             </motion.div>
 
@@ -214,10 +341,15 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               transition={{ delay: 0.9 }}
             >
               <p className="text-sm text-gray-600">
-                Novo por aqui?{' '}
-                <a href="#" className="text-indigo-600 hover:text-indigo-700 hover:underline transition-colors">
-                  Crie sua conta gratuita
-                </a>
+                {isRegister ? 'Já tem uma conta?' : 'Novo por aqui?'}{' '}
+                <button
+                  type="button"
+                  onClick={toggleMode}
+                  className="text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
+                  disabled={isLoading}
+                >
+                  {isRegister ? 'Faça login' : 'Crie sua conta gratuita'}
+                </button>
               </p>
             </motion.div>
           </form>

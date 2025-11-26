@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LoginPage } from './components/LoginPage';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -8,30 +8,89 @@ import { ProfilePage } from './components/ProfilePage';
 import { SettingsPage } from './components/SettingsPage';
 import { EventDialog } from './components/EventDialog';
 import { Event } from './lib/types';
-import { mockEvents, mockUser } from './lib/mock-data';
 import { Toaster, toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
+import { 
+  authApi, 
+  eventsApi, 
+  userApi,
+  apiEventToLocal, 
+  localEventToApi,
+  AuthResponse 
+} from './lib/api';
+import { User } from './lib/types';
+import { Loader2 } from 'lucide-react';
 
 type Page = 'dashboard' | 'create' | 'search' | 'profile' | 'settings';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
-  const [events, setEvents] = useState<Event[]>(mockEvents);
-  const [user, setUser] = useState(mockUser);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const handleLogin = () => {
+  // Verificar autenticação ao carregar
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  // Carregar eventos quando logado
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadEvents();
+    }
+  }, [isLoggedIn]);
+
+  const checkAuth = async () => {
+    try {
+      if (authApi.isAuthenticated()) {
+        const result = await authApi.validate();
+        if (result.valid && result.user) {
+          setUser(result.user as User);
+          setIsLoggedIn(true);
+        } else {
+          // Token inválido, fazer logout
+          authApi.logout();
+        }
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      authApi.logout();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadEvents = async () => {
+    try {
+      const apiEvents = await eventsApi.getAll();
+      const localEvents = apiEvents.map(apiEventToLocal);
+      setEvents(localEvents);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      toast.error('Erro ao carregar eventos', {
+        description: 'Não foi possível carregar seus eventos. Tente novamente.',
+      });
+    }
+  };
+
+  const handleLogin = (userData: AuthResponse['user']) => {
+    setUser(userData as User);
     setIsLoggedIn(true);
     toast.success('Bem-vindo ao MyDay!', {
-      description: 'Vá em frente e organize seu dia com estilo.',
+      description: `Olá, ${userData.name}! Vá em frente e organize seu dia com estilo.`,
     });
   };
 
   const handleLogout = () => {
+    authApi.logout();
     setIsLoggedIn(false);
+    setUser(null);
+    setEvents([]);
     setCurrentPage('dashboard');
     toast.info('Até logo!', {
       description: 'Volte sempre ao MyDay para organizar seus dias.',
@@ -42,31 +101,57 @@ export default function App() {
     setCurrentPage(page as Page);
   };
 
-  const handleCreateEvent = (newEventData: Omit<Event, 'id'>) => {
-    const newEvent: Event = {
-      ...newEventData,
-      id: String(Date.now()),
-    };
-    setEvents([...events, newEvent]);
-    setCurrentPage('dashboard');
-    toast.success('Evento criado com sucesso!', {
-      description: `"${newEvent.title}" foi adicionado à sua agenda.`,
-    });
+  const handleCreateEvent = async (newEventData: Omit<Event, 'id'>) => {
+    try {
+      const apiData = localEventToApi({ ...newEventData, id: '' } as Event);
+      const createdEvent = await eventsApi.create(apiData);
+      const localEvent = apiEventToLocal(createdEvent);
+      
+      setEvents([...events, localEvent]);
+      setCurrentPage('dashboard');
+      toast.success('Evento criado com sucesso!', {
+        description: `"${localEvent.title}" foi adicionado à sua agenda.`,
+      });
+    } catch (error: any) {
+      console.error('Error creating event:', error);
+      toast.error('Erro ao criar evento', {
+        description: error.message || 'Não foi possível criar o evento. Tente novamente.',
+      });
+    }
   };
 
-  const handleUpdateEvent = (updatedEvent: Event) => {
-    setEvents(events.map((e) => (e.id === updatedEvent.id ? updatedEvent : e)));
-    toast.success('Evento atualizado!', {
-      description: 'As alterações foram salvas.',
-    });
+  const handleUpdateEvent = async (updatedEvent: Event) => {
+    try {
+      const apiData = localEventToApi(updatedEvent);
+      await eventsApi.update(updatedEvent.id, apiData);
+      
+      setEvents(events.map((e) => (e.id === updatedEvent.id ? updatedEvent : e)));
+      toast.success('Evento atualizado!', {
+        description: 'As alterações foram salvas.',
+      });
+    } catch (error: any) {
+      console.error('Error updating event:', error);
+      toast.error('Erro ao atualizar evento', {
+        description: error.message || 'Não foi possível atualizar o evento. Tente novamente.',
+      });
+    }
   };
 
-  const handleDeleteEvent = (eventId: string) => {
-    const event = events.find((e) => e.id === eventId);
-    setEvents(events.filter((e) => e.id !== eventId));
-    toast.success('Evento excluído!', {
-      description: event ? `"${event.title}" foi removido da sua agenda.` : undefined,
-    });
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      const event = events.find((e) => e.id === eventId);
+      await eventsApi.delete(eventId);
+      
+      setEvents(events.filter((e) => e.id !== eventId));
+      toast.success('Evento excluído!', {
+        description: event ? `"${event.title}" foi removido da sua agenda.` : undefined,
+      });
+    } catch (error: any) {
+      console.error('Error deleting event:', error);
+      toast.error('Erro ao excluir evento', {
+        description: error.message || 'Não foi possível excluir o evento. Tente novamente.',
+      });
+    }
   };
 
   const handleEventClick = (event: Event) => {
@@ -74,13 +159,51 @@ export default function App() {
     setIsEventDialogOpen(true);
   };
 
-  const handleUpdateUser = (updatedUser: typeof mockUser) => {
-    setUser(updatedUser);
+  const handleUpdateUser = async (updatedUser: User) => {
+    try {
+      const result = await userApi.updateProfile({
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+      });
+      
+      setUser(result as User);
+      // Atualizar no localStorage também
+      localStorage.setItem('user', JSON.stringify(result));
+      
+      toast.success('Perfil atualizado!', {
+        description: 'Suas informações foram salvas com sucesso.',
+      });
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      toast.error('Erro ao atualizar perfil', {
+        description: error.message || 'Não foi possível atualizar seu perfil. Tente novamente.',
+      });
+    }
   };
 
   const handleUpdateSettings = (settings: any) => {
     console.log('Settings updated:', settings);
+    toast.success('Configurações salvas!');
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl p-5 shadow-2xl">
+            <Loader2 className="size-10 text-white animate-spin" />
+          </div>
+          <p className="text-gray-600">Carregando MyDay...</p>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return <LoginPage onLogin={handleLogin} />;
@@ -138,7 +261,7 @@ export default function App() {
               />
             )}
 
-            {currentPage === 'profile' && (
+            {currentPage === 'profile' && user && (
               <ProfilePage
                 user={user}
                 onUpdateUser={handleUpdateUser}

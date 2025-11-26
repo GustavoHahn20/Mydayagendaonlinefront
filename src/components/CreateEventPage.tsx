@@ -35,8 +35,8 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    startDate: new Date(2025, 10, 21).toISOString().split('T')[0],
-    endDate: new Date(2025, 10, 21).toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
     startTime: '09:00',
     endTime: '10:00',
     type: 'Reunião',

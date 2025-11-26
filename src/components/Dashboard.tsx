@@ -37,17 +37,20 @@ export function Dashboard({ events, onEventUpdate, onEventDelete, onCreateEvent 
     setSelectedEvent(null);
   };
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const todayEvents = events.filter(
-    (event) => event.startDate.toDateString() === new Date(2025, 10, 21).toDateString()
+    (event) => event.startDate.toDateString() === today.toDateString()
   );
 
   const upcomingEvents = events
-    .filter((event) => event.startDate >= new Date(2025, 10, 21))
+    .filter((event) => event.startDate >= today)
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
     .slice(0, 5);
 
   const weekEvents = events.filter((e) => {
-    const weekStart = new Date(2025, 10, 21);
+    const weekStart = new Date(today);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
@@ -88,7 +91,7 @@ export function Dashboard({ events, onEventUpdate, onEventDelete, onCreateEvent 
               </motion.span>
             </div>
             <p className="text-sm sm:text-base text-gray-600">
-              {new Date(2025, 10, 21).toLocaleDateString('pt-BR', { 
+              {new Date().toLocaleDateString('pt-BR', { 
                 weekday: isMobile ? 'short' : 'long', 
                 day: 'numeric', 
                 month: isMobile ? 'short' : 'long',
