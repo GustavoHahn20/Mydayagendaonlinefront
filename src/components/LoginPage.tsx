@@ -75,9 +75,9 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-3 sm:p-4 relative overflow-hidden safe-area-pt safe-area-pb">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-3 sm:p-4 relative overflow-y-auto safe-area-pt safe-area-pb">
+      {/* Animated background elements - hidden on small screens */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
         <motion.div
           className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"
           animate={{
@@ -117,7 +117,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       </div>
 
       <motion.div
-        className="w-full max-w-md relative z-10"
+        className="w-full max-w-md relative z-10 my-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -354,32 +354,34 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             </motion.div>
           </form>
 
-          {/* Feature highlights */}
-          <motion.div
-            className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-          >
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
-              <div className="space-y-1">
-                <div className="text-xl sm:text-2xl">✨</div>
-                <p className="text-[10px] sm:text-xs text-gray-600">Personalizável</p>
+          {/* Feature highlights - hidden on register mode on small screens */}
+          {!isRegister && (
+            <motion.div
+              className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+            >
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
+                <div className="space-y-1">
+                  <div className="text-xl sm:text-2xl">✨</div>
+                  <p className="text-[10px] sm:text-xs text-gray-600">Personalizável</p>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xl sm:text-2xl">🚀</div>
+                  <p className="text-[10px] sm:text-xs text-gray-600">Moderno</p>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xl sm:text-2xl">💪</div>
+                  <p className="text-[10px] sm:text-xs text-gray-600">Poderoso</p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <div className="text-xl sm:text-2xl">🚀</div>
-                <p className="text-[10px] sm:text-xs text-gray-600">Moderno</p>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xl sm:text-2xl">💪</div>
-                <p className="text-[10px] sm:text-xs text-gray-600">Poderoso</p>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
         </motion.div>
 
         <motion.p
-          className="text-center text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 px-4"
+          className="text-center text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 px-4 hidden sm:block"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1 }}
