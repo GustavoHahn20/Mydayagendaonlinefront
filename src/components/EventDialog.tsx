@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import {
   AlertDialog,
@@ -33,9 +33,29 @@ import {
   Palette,
   CalendarCheck
 } from 'lucide-react';
-import { Event } from '../lib/types';
-import { eventTypes, eventCategories, repeatOptions } from '../lib/mock-data';
+import { Event, EventType, EventCategory, RepeatOption } from '../lib/types';
+import { settingsApi } from '../lib/api';
 import { motion, AnimatePresence } from 'motion/react';
+
+// Valores padrão para fallback
+const defaultEventTypes: EventType[] = [
+  { id: '1', name: 'Reunião', color: '#3b82f6', icon: 'users' },
+  { id: '2', name: 'Tarefa', color: '#10b981', icon: 'check-circle' },
+  { id: '3', name: 'Compromisso', color: '#f59e0b', icon: 'calendar' },
+];
+
+const defaultEventCategories: EventCategory[] = [
+  { id: '1', name: 'Trabalho', color: '#3b82f6' },
+  { id: '2', name: 'Pessoal', color: '#10b981' },
+  { id: '3', name: 'Saúde', color: '#f59e0b' },
+];
+
+const defaultRepeatOptions: RepeatOption[] = [
+  { id: '1', name: 'Não repetir', value: 'none' },
+  { id: '2', name: 'Diariamente', value: 'daily' },
+  { id: '3', name: 'Semanalmente', value: 'weekly' },
+  { id: '4', name: 'Mensalmente', value: 'monthly' },
+];
 
 interface EventDialogProps {
   event: Event | null;
@@ -49,6 +69,51 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
   const [isEditing, setIsEditing] = useState(false);
   const [editedEvent, setEditedEvent] = useState<Event | null>(event);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  // Estados para configurações da API
+  const [eventTypes, setEventTypes] = useState<EventType[]>(defaultEventTypes);
+  const [eventCategories, setEventCategories] = useState<EventCategory[]>(defaultEventCategories);
+  const [repeatOptions, setRepeatOptions] = useState<RepeatOption[]>(defaultRepeatOptions);
+
+  // Carregar configurações da API quando o dialog abrir
+  useEffect(() => {
+    if (open) {
+      loadSettings();
+    }
+  }, [open]);
+
+  const loadSettings = async () => {
+    try {
+      const settings = await settingsApi.getAll();
+      
+      if (settings.eventTypes?.length > 0) {
+        setEventTypes(settings.eventTypes.map(t => ({
+          id: t.id,
+          name: t.name,
+          color: t.color,
+          icon: t.icon
+        })));
+      }
+      
+      if (settings.eventCategories?.length > 0) {
+        setEventCategories(settings.eventCategories.map(c => ({
+          id: c.id,
+          name: c.name,
+          color: c.color
+        })));
+      }
+      
+      if (settings.repeatOptions?.length > 0) {
+        setRepeatOptions(settings.repeatOptions.map(r => ({
+          id: r.id,
+          name: r.name,
+          value: r.value
+        })));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error);
+    }
+  };
 
   const handleEdit = () => {
     setEditedEvent(event);

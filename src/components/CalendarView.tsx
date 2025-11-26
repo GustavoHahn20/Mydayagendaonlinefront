@@ -12,7 +12,7 @@ interface CalendarViewProps {
 }
 
 export function CalendarViewComponent({ events, view, onEventClick }: CalendarViewProps) {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 21)); // 21 de novembro de 2025
+  const [currentDate, setCurrentDate] = useState(new Date()); // Data atual do sistema
   const [isMobile, setIsMobile] = useState(false);
 
   // Detectar tamanho da tela
@@ -73,7 +73,7 @@ export function CalendarViewComponent({ events, view, onEventClick }: CalendarVi
   };
 
   const goToToday = () => {
-    setCurrentDate(new Date(2025, 10, 21));
+    setCurrentDate(new Date());
   };
 
   return (
@@ -154,7 +154,7 @@ function MonthView({ events, currentDate, onEventClick, isMobile }: { events: Ev
       <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {days.map((day, index) => {
           const isCurrentMonth = day.getMonth() === currentDate.getMonth();
-          const isToday = day.toDateString() === new Date(2025, 10, 21).toDateString();
+          const isToday = day.toDateString() === new Date().toDateString();
           const dayEvents = events.filter((event) => event.startDate.toDateString() === day.toDateString());
 
           return (
@@ -214,7 +214,7 @@ function WeekView({ events, currentDate, onEventClick, isMobile }: { events: Eve
       <div className={`grid gap-1 sm:gap-2 ${isMobile ? 'grid-cols-8 min-w-[500px]' : 'grid-cols-8 min-w-[800px]'}`}>
         <div className="text-xs sm:text-sm text-gray-600 sticky left-0 bg-white z-10"></div>
         {weekDays.map((day) => {
-          const isToday = day.toDateString() === new Date(2025, 10, 21).toDateString();
+          const isToday = day.toDateString() === new Date().toDateString();
           return (
             <div key={day.toISOString()} className="text-center">
               <div className={`text-[10px] sm:text-sm ${isToday ? 'text-blue-600 font-semibold' : 'text-gray-600'}`}>

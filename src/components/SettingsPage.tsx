@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -16,20 +16,49 @@ import {
   Save,
   X,
   Home,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 import { EventType, EventCategory, RepeatOption } from '../lib/types';
-import { eventTypes as initialEventTypes, eventCategories as initialEventCategories, repeatOptions as initialRepeatOptions } from '../lib/mock-data';
+import { 
+  settingsApi,
+  EventTypeAPI,
+  EventCategoryAPI,
+  RepeatOptionAPI,
+  GeneralSettingsAPI
+} from '../lib/api';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 
 interface SettingsPageProps {
   onUpdateSettings: (settings: any) => void;
 }
 
+// Interface para configurações gerais locais
+interface GeneralSettings {
+  defaultView: string;
+  weekStartsOn: string;
+  timeFormat: string;
+  dateFormat: string;
+  defaultReminder: string;
+  theme: string;
+}
+
+const defaultGeneralSettings: GeneralSettings = {
+  defaultView: 'month',
+  weekStartsOn: 'sunday',
+  timeFormat: '24h',
+  dateFormat: 'dd/mm/yyyy',
+  defaultReminder: '15min',
+  theme: 'light',
+};
+
 export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
-  const [eventTypes, setEventTypes] = useState<EventType[]>(initialEventTypes);
-  const [eventCategories, setEventCategories] = useState<EventCategory[]>(initialEventCategories);
-  const [repeatOptions, setRepeatOptions] = useState<RepeatOption[]>(initialRepeatOptions);
+  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
+  const [eventCategories, setEventCategories] = useState<EventCategory[]>([]);
+  const [repeatOptions, setRepeatOptions] = useState<RepeatOption[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [editingType, setEditingType] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
@@ -40,86 +69,244 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
   const [newRepeat, setNewRepeat] = useState({ name: '', value: '' });
 
   // Configurações gerais
-  const [generalSettings, setGeneralSettings] = useState({
-    defaultView: 'month',
-    weekStartsOn: 'sunday',
-    timeFormat: '24h',
-    dateFormat: 'dd/mm/yyyy',
-    defaultReminder: '15min',
-    theme: 'light',
-  });
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettings>(defaultGeneralSettings);
+
+  // Carregar configurações da API ao montar o componente
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    setIsLoading(true);
+    try {
+      const settings = await settingsApi.getAll();
+      
+      // Converter tipos da API para o formato local
+      setEventTypes(settings.eventTypes.map(t => ({
+        id: t.id,
+        name: t.name,
+        color: t.color,
+        icon: t.icon
+      })));
+      
+      setEventCategories(settings.eventCategories.map(c => ({
+        id: c.id,
+        name: c.name,
+        color: c.color
+      })));
+      
+      setRepeatOptions(settings.repeatOptions.map(r => ({
+        id: r.id,
+        name: r.name,
+        value: r.value
+      })));
+      
+      if (settings.generalSettings) {
+        setGeneralSettings({
+          defaultView: settings.generalSettings.defaultView,
+          weekStartsOn: settings.generalSettings.weekStartsOn,
+          timeFormat: settings.generalSettings.timeFormat,
+          dateFormat: settings.generalSettings.dateFormat,
+          defaultReminder: settings.generalSettings.defaultReminder,
+          theme: settings.generalSettings.theme,
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error);
+      toast.error('Erro ao carregar configurações', {
+        description: 'Não foi possível carregar suas configurações. Usando valores padrão.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const updateGeneralSetting = (key: string, value: string) => {
     setGeneralSettings({ ...generalSettings, [key]: value });
   };
 
-  const handleSaveGeneralSettings = () => {
-    onUpdateSettings({ general: generalSettings });
-    alert('Configurações salvas com sucesso!');
+  const handleSaveGeneralSettings = async () => {
+    setIsSaving(true);
+    try {
+      await settingsApi.updateGeneralSettings(generalSettings);
+      onUpdateSettings({ general: generalSettings });
+      toast.success('Configurações gerais salvas com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
+      toast.error('Erro ao salvar configurações');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Funções para Tipos de Evento
-  const handleAddType = () => {
+  const handleAddType = async () => {
     if (newType.name.trim()) {
-      const type: EventType = {
-        id: String(Date.now()),
-        ...newType,
-      };
-      setEventTypes([...eventTypes, type]);
-      setNewType({ name: '', color: '#3b82f6', icon: 'calendar' });
+      setIsSaving(true);
+      try {
+        const createdType = await settingsApi.createEventType(newType);
+        const type: EventType = {
+          id: createdType.id,
+          name: createdType.name,
+          color: createdType.color,
+          icon: createdType.icon,
+        };
+        setEventTypes([...eventTypes, type]);
+        setNewType({ name: '', color: '#3b82f6', icon: 'calendar' });
+        toast.success('Tipo de evento adicionado!');
+      } catch (error) {
+        console.error('Erro ao adicionar tipo:', error);
+        toast.error('Erro ao adicionar tipo de evento');
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
-  const handleDeleteType = (id: string) => {
-    setEventTypes(eventTypes.filter((t) => t.id !== id));
+  const handleDeleteType = async (id: string) => {
+    setIsSaving(true);
+    try {
+      await settingsApi.deleteEventType(id);
+      setEventTypes(eventTypes.filter((t) => t.id !== id));
+      toast.success('Tipo de evento removido!');
+    } catch (error) {
+      console.error('Erro ao remover tipo:', error);
+      toast.error('Erro ao remover tipo de evento');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleUpdateType = (id: string, updates: Partial<EventType>) => {
-    setEventTypes(eventTypes.map((t) => (t.id === id ? { ...t, ...updates } : t)));
-    setEditingType(null);
+  const handleUpdateType = async (id: string, updates: Partial<EventType>) => {
+    setIsSaving(true);
+    try {
+      await settingsApi.updateEventType(id, updates);
+      setEventTypes(eventTypes.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+      setEditingType(null);
+      toast.success('Tipo de evento atualizado!');
+    } catch (error) {
+      console.error('Erro ao atualizar tipo:', error);
+      toast.error('Erro ao atualizar tipo de evento');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Funções para Categorias
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (newCategory.name.trim()) {
-      const category: EventCategory = {
-        id: String(Date.now()),
-        ...newCategory,
-      };
-      setEventCategories([...eventCategories, category]);
-      setNewCategory({ name: '', color: '#3b82f6' });
+      setIsSaving(true);
+      try {
+        const createdCategory = await settingsApi.createEventCategory(newCategory);
+        const category: EventCategory = {
+          id: createdCategory.id,
+          name: createdCategory.name,
+          color: createdCategory.color,
+        };
+        setEventCategories([...eventCategories, category]);
+        setNewCategory({ name: '', color: '#3b82f6' });
+        toast.success('Categoria adicionada!');
+      } catch (error) {
+        console.error('Erro ao adicionar categoria:', error);
+        toast.error('Erro ao adicionar categoria');
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
-  const handleDeleteCategory = (id: string) => {
-    setEventCategories(eventCategories.filter((c) => c.id !== id));
+  const handleDeleteCategory = async (id: string) => {
+    setIsSaving(true);
+    try {
+      await settingsApi.deleteEventCategory(id);
+      setEventCategories(eventCategories.filter((c) => c.id !== id));
+      toast.success('Categoria removida!');
+    } catch (error) {
+      console.error('Erro ao remover categoria:', error);
+      toast.error('Erro ao remover categoria');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleUpdateCategory = (id: string, updates: Partial<EventCategory>) => {
-    setEventCategories(eventCategories.map((c) => (c.id === id ? { ...c, ...updates } : c)));
-    setEditingCategory(null);
+  const handleUpdateCategory = async (id: string, updates: Partial<EventCategory>) => {
+    setIsSaving(true);
+    try {
+      await settingsApi.updateEventCategory(id, updates);
+      setEventCategories(eventCategories.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+      setEditingCategory(null);
+      toast.success('Categoria atualizada!');
+    } catch (error) {
+      console.error('Erro ao atualizar categoria:', error);
+      toast.error('Erro ao atualizar categoria');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Funções para Opções de Repetição
-  const handleAddRepeat = () => {
+  const handleAddRepeat = async () => {
     if (newRepeat.name.trim() && newRepeat.value.trim()) {
-      const repeat: RepeatOption = {
-        id: String(Date.now()),
-        ...newRepeat,
-      };
-      setRepeatOptions([...repeatOptions, repeat]);
-      setNewRepeat({ name: '', value: '' });
+      setIsSaving(true);
+      try {
+        const createdOption = await settingsApi.createRepeatOption(newRepeat);
+        const repeat: RepeatOption = {
+          id: createdOption.id,
+          name: createdOption.name,
+          value: createdOption.value,
+        };
+        setRepeatOptions([...repeatOptions, repeat]);
+        setNewRepeat({ name: '', value: '' });
+        toast.success('Opção de repetição adicionada!');
+      } catch (error) {
+        console.error('Erro ao adicionar opção de repetição:', error);
+        toast.error('Erro ao adicionar opção de repetição');
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
-  const handleDeleteRepeat = (id: string) => {
-    setRepeatOptions(repeatOptions.filter((r) => r.id !== id));
+  const handleDeleteRepeat = async (id: string) => {
+    setIsSaving(true);
+    try {
+      await settingsApi.deleteRepeatOption(id);
+      setRepeatOptions(repeatOptions.filter((r) => r.id !== id));
+      toast.success('Opção de repetição removida!');
+    } catch (error) {
+      console.error('Erro ao remover opção de repetição:', error);
+      toast.error('Erro ao remover opção de repetição');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleUpdateRepeat = (id: string, updates: Partial<RepeatOption>) => {
-    setRepeatOptions(repeatOptions.map((r) => (r.id === id ? { ...r, ...updates } : r)));
-    setEditingRepeat(null);
+  const handleUpdateRepeat = async (id: string, updates: Partial<RepeatOption>) => {
+    setIsSaving(true);
+    try {
+      await settingsApi.updateRepeatOption(id, updates);
+      setRepeatOptions(repeatOptions.map((r) => (r.id === id ? { ...r, ...updates } : r)));
+      setEditingRepeat(null);
+      toast.success('Opção de repetição atualizada!');
+    } catch (error) {
+      console.error('Erro ao atualizar opção de repetição:', error);
+      toast.error('Erro ao atualizar opção de repetição');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex-1 bg-gray-50 p-6 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="size-8 text-indigo-600 animate-spin" />
+          <p className="text-gray-600">Carregando configurações...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto h-full">
@@ -256,9 +443,9 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
                 </div>
 
                 <div className="pt-4">
-                  <Button onClick={handleSaveGeneralSettings} className="gap-2">
-                    <Save className="size-4" />
-                    Salvar Configurações
+                  <Button onClick={handleSaveGeneralSettings} disabled={isSaving} className="gap-2">
+                    {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                    {isSaving ? 'Salvando...' : 'Salvar Configurações'}
                   </Button>
                 </div>
               </CardContent>

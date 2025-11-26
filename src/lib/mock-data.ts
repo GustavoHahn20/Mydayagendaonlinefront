@@ -8,7 +8,8 @@ export const mockUser: User = {
   timezone: 'America/Sao_Paulo',
 };
 
-export const eventTypes: EventType[] = [
+// Dados padrão para tipos de evento
+export const defaultEventTypes: EventType[] = [
   { id: '1', name: 'Reunião', color: '#3b82f6', icon: 'users' },
   { id: '2', name: 'Tarefa', color: '#10b981', icon: 'check-circle' },
   { id: '3', name: 'Compromisso', color: '#f59e0b', icon: 'calendar' },
@@ -16,7 +17,8 @@ export const eventTypes: EventType[] = [
   { id: '5', name: 'Pessoal', color: '#ec4899', icon: 'heart' },
 ];
 
-export const eventCategories: EventCategory[] = [
+// Dados padrão para categorias
+export const defaultEventCategories: EventCategory[] = [
   { id: '1', name: 'Trabalho', color: '#3b82f6' },
   { id: '2', name: 'Pessoal', color: '#10b981' },
   { id: '3', name: 'Saúde', color: '#f59e0b' },
@@ -24,7 +26,8 @@ export const eventCategories: EventCategory[] = [
   { id: '5', name: 'Família', color: '#ec4899' },
 ];
 
-export const repeatOptions: RepeatOption[] = [
+// Dados padrão para opções de repetição
+export const defaultRepeatOptions: RepeatOption[] = [
   { id: '1', name: 'Não repetir', value: 'none' },
   { id: '2', name: 'Diariamente', value: 'daily' },
   { id: '3', name: 'Semanalmente', value: 'weekly' },
@@ -32,13 +35,121 @@ export const repeatOptions: RepeatOption[] = [
   { id: '5', name: 'Anualmente', value: 'yearly' },
 ];
 
+// Funções para gerenciar configurações no localStorage
+const STORAGE_KEYS = {
+  EVENT_TYPES: 'myday_event_types',
+  EVENT_CATEGORIES: 'myday_event_categories',
+  REPEAT_OPTIONS: 'myday_repeat_options',
+  GENERAL_SETTINGS: 'myday_general_settings',
+};
+
+// Tipos de evento - carregar e salvar
+export const getEventTypes = (): EventType[] => {
+  const stored = localStorage.getItem(STORAGE_KEYS.EVENT_TYPES);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return defaultEventTypes;
+    }
+  }
+  return defaultEventTypes;
+};
+
+export const saveEventTypes = (types: EventType[]): void => {
+  localStorage.setItem(STORAGE_KEYS.EVENT_TYPES, JSON.stringify(types));
+};
+
+// Categorias - carregar e salvar
+export const getEventCategories = (): EventCategory[] => {
+  const stored = localStorage.getItem(STORAGE_KEYS.EVENT_CATEGORIES);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return defaultEventCategories;
+    }
+  }
+  return defaultEventCategories;
+};
+
+export const saveEventCategories = (categories: EventCategory[]): void => {
+  localStorage.setItem(STORAGE_KEYS.EVENT_CATEGORIES, JSON.stringify(categories));
+};
+
+// Opções de repetição - carregar e salvar
+export const getRepeatOptions = (): RepeatOption[] => {
+  const stored = localStorage.getItem(STORAGE_KEYS.REPEAT_OPTIONS);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return defaultRepeatOptions;
+    }
+  }
+  return defaultRepeatOptions;
+};
+
+export const saveRepeatOptions = (options: RepeatOption[]): void => {
+  localStorage.setItem(STORAGE_KEYS.REPEAT_OPTIONS, JSON.stringify(options));
+};
+
+// Configurações gerais
+export interface GeneralSettings {
+  defaultView: string;
+  weekStartsOn: string;
+  timeFormat: string;
+  dateFormat: string;
+  defaultReminder: string;
+  theme: string;
+}
+
+export const defaultGeneralSettings: GeneralSettings = {
+  defaultView: 'month',
+  weekStartsOn: 'sunday',
+  timeFormat: '24h',
+  dateFormat: 'dd/mm/yyyy',
+  defaultReminder: '15min',
+  theme: 'light',
+};
+
+export const getGeneralSettings = (): GeneralSettings => {
+  const stored = localStorage.getItem(STORAGE_KEYS.GENERAL_SETTINGS);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return defaultGeneralSettings;
+    }
+  }
+  return defaultGeneralSettings;
+};
+
+export const saveGeneralSettings = (settings: GeneralSettings): void => {
+  localStorage.setItem(STORAGE_KEYS.GENERAL_SETTINGS, JSON.stringify(settings));
+};
+
+// Exports legados para compatibilidade
+export const eventTypes = getEventTypes();
+export const eventCategories = getEventCategories();
+export const repeatOptions = getRepeatOptions();
+
+// Helper para criar data relativa ao dia atual
+const getRelativeDate = (daysOffset: number): Date => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysOffset);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+// Eventos mock com datas relativas à data atual
 export const mockEvents: Event[] = [
   {
     id: '1',
     title: 'Reunião com Cliente',
     description: 'Discutir proposta do novo projeto',
-    startDate: new Date(2025, 10, 21),
-    endDate: new Date(2025, 10, 21),
+    startDate: getRelativeDate(0), // Hoje
+    endDate: getRelativeDate(0),
     startTime: '09:00',
     endTime: '10:30',
     type: 'Reunião',
@@ -55,8 +166,8 @@ export const mockEvents: Event[] = [
     id: '2',
     title: 'Consulta Médica',
     description: 'Check-up anual',
-    startDate: new Date(2025, 10, 22),
-    endDate: new Date(2025, 10, 22),
+    startDate: getRelativeDate(1), // Amanhã
+    endDate: getRelativeDate(1),
     startTime: '14:00',
     endTime: '15:00',
     type: 'Compromisso',
@@ -71,8 +182,8 @@ export const mockEvents: Event[] = [
     id: '3',
     title: 'Aniversário da Maria',
     description: 'Festa de aniversário',
-    startDate: new Date(2025, 10, 25),
-    endDate: new Date(2025, 10, 25),
+    startDate: getRelativeDate(4), // 4 dias a partir de hoje
+    endDate: getRelativeDate(4),
     startTime: '19:00',
     endTime: '23:00',
     type: 'Pessoal',
@@ -88,8 +199,8 @@ export const mockEvents: Event[] = [
     id: '4',
     title: 'Entregar Relatório',
     description: 'Relatório mensal de vendas',
-    startDate: new Date(2025, 10, 24),
-    endDate: new Date(2025, 10, 24),
+    startDate: getRelativeDate(3), // 3 dias a partir de hoje
+    endDate: getRelativeDate(3),
     startTime: '17:00',
     endTime: '18:00',
     type: 'Tarefa',
@@ -104,8 +215,8 @@ export const mockEvents: Event[] = [
     id: '5',
     title: 'Academia',
     description: 'Treino de força',
-    startDate: new Date(2025, 10, 21),
-    endDate: new Date(2025, 10, 21),
+    startDate: getRelativeDate(0), // Hoje
+    endDate: getRelativeDate(0),
     startTime: '18:00',
     endTime: '19:30',
     type: 'Pessoal',

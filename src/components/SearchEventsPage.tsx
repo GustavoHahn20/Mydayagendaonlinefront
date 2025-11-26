@@ -18,9 +18,22 @@ import {
   ChevronRight,
   SlidersHorizontal
 } from 'lucide-react';
-import { Event } from '../lib/types';
-import { eventTypes, eventCategories } from '../lib/mock-data';
+import { Event, EventType, EventCategory } from '../lib/types';
+import { settingsApi } from '../lib/api';
 import { motion, AnimatePresence } from 'motion/react';
+
+// Valores padrão para fallback
+const defaultEventTypes: EventType[] = [
+  { id: '1', name: 'Reunião', color: '#3b82f6', icon: 'users' },
+  { id: '2', name: 'Tarefa', color: '#10b981', icon: 'check-circle' },
+  { id: '3', name: 'Compromisso', color: '#f59e0b', icon: 'calendar' },
+];
+
+const defaultEventCategories: EventCategory[] = [
+  { id: '1', name: 'Trabalho', color: '#3b82f6' },
+  { id: '2', name: 'Pessoal', color: '#10b981' },
+  { id: '3', name: 'Saúde', color: '#f59e0b' },
+];
 
 interface SearchEventsPageProps {
   events: Event[];
@@ -39,6 +52,10 @@ export function SearchEventsPage({ events, onEventClick }: SearchEventsPageProps
 
   const [showFilters, setShowFilters] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Estados para configurações da API
+  const [eventTypes, setEventTypes] = useState<EventType[]>(defaultEventTypes);
+  const [eventCategories, setEventCategories] = useState<EventCategory[]>(defaultEventCategories);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -51,6 +68,36 @@ export function SearchEventsPage({ events, onEventClick }: SearchEventsPageProps
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Carregar configurações da API
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const settings = await settingsApi.getAll();
+      
+      if (settings.eventTypes?.length > 0) {
+        setEventTypes(settings.eventTypes.map(t => ({
+          id: t.id,
+          name: t.name,
+          color: t.color,
+          icon: t.icon
+        })));
+      }
+      
+      if (settings.eventCategories?.length > 0) {
+        setEventCategories(settings.eventCategories.map(c => ({
+          id: c.id,
+          name: c.name,
+          color: c.color
+        })));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error);
+    }
+  };
 
   const updateFilter = (field: string, value: string) => {
     setFilters({ ...filters, [field]: value });

@@ -83,6 +83,47 @@ export interface CreateEventRequest {
   notes?: string;
 }
 
+// Tipos para configurações (Settings)
+export interface EventTypeAPI {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  userId: string;
+}
+
+export interface EventCategoryAPI {
+  id: string;
+  name: string;
+  color: string;
+  userId: string;
+}
+
+export interface RepeatOptionAPI {
+  id: string;
+  name: string;
+  value: string;
+  userId: string;
+}
+
+export interface GeneralSettingsAPI {
+  id?: string;
+  defaultView: string;
+  weekStartsOn: string;
+  timeFormat: string;
+  dateFormat: string;
+  defaultReminder: string;
+  theme: string;
+  userId: string;
+}
+
+export interface UserSettingsAPI {
+  eventTypes: EventTypeAPI[];
+  eventCategories: EventCategoryAPI[];
+  repeatOptions: RepeatOptionAPI[];
+  generalSettings: GeneralSettingsAPI;
+}
+
 // Classe de erro da API
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -349,6 +390,102 @@ export const userApi = {
 
   updateProfile: async (data: Partial<RegisterRequest>): Promise<AuthResponse['user']> => {
     return request<AuthResponse['user']>('/api/user', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
+// ==================== SETTINGS ====================
+
+export const settingsApi = {
+  // Obter todas as configurações do usuário
+  getAll: async (): Promise<UserSettingsAPI> => {
+    return request<UserSettingsAPI>('/api/settings');
+  },
+
+  // ==================== TIPOS DE EVENTO ====================
+  getEventTypes: async (): Promise<EventTypeAPI[]> => {
+    return request<EventTypeAPI[]>('/api/settings/event-types');
+  },
+
+  createEventType: async (data: Omit<EventTypeAPI, 'id' | 'userId'>): Promise<EventTypeAPI> => {
+    return request<EventTypeAPI>('/api/settings/event-types', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateEventType: async (id: string, data: Partial<Omit<EventTypeAPI, 'id' | 'userId'>>): Promise<EventTypeAPI> => {
+    return request<EventTypeAPI>(`/api/settings/event-types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteEventType: async (id: string): Promise<void> => {
+    await request<void>(`/api/settings/event-types/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // ==================== CATEGORIAS ====================
+  getEventCategories: async (): Promise<EventCategoryAPI[]> => {
+    return request<EventCategoryAPI[]>('/api/settings/categories');
+  },
+
+  createEventCategory: async (data: Omit<EventCategoryAPI, 'id' | 'userId'>): Promise<EventCategoryAPI> => {
+    return request<EventCategoryAPI>('/api/settings/categories', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateEventCategory: async (id: string, data: Partial<Omit<EventCategoryAPI, 'id' | 'userId'>>): Promise<EventCategoryAPI> => {
+    return request<EventCategoryAPI>(`/api/settings/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteEventCategory: async (id: string): Promise<void> => {
+    await request<void>(`/api/settings/categories/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // ==================== OPÇÕES DE REPETIÇÃO ====================
+  getRepeatOptions: async (): Promise<RepeatOptionAPI[]> => {
+    return request<RepeatOptionAPI[]>('/api/settings/repeat-options');
+  },
+
+  createRepeatOption: async (data: Omit<RepeatOptionAPI, 'id' | 'userId'>): Promise<RepeatOptionAPI> => {
+    return request<RepeatOptionAPI>('/api/settings/repeat-options', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateRepeatOption: async (id: string, data: Partial<Omit<RepeatOptionAPI, 'id' | 'userId'>>): Promise<RepeatOptionAPI> => {
+    return request<RepeatOptionAPI>(`/api/settings/repeat-options/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteRepeatOption: async (id: string): Promise<void> => {
+    await request<void>(`/api/settings/repeat-options/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // ==================== CONFIGURAÇÕES GERAIS ====================
+  getGeneralSettings: async (): Promise<GeneralSettingsAPI> => {
+    return request<GeneralSettingsAPI>('/api/settings/general');
+  },
+
+  updateGeneralSettings: async (data: Omit<GeneralSettingsAPI, 'id' | 'userId'>): Promise<GeneralSettingsAPI> => {
+    return request<GeneralSettingsAPI>('/api/settings/general', {
       method: 'PUT',
       body: JSON.stringify(data),
     });

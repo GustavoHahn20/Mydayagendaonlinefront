@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -20,18 +20,88 @@ import {
   Home,
   ChevronRight,
   Plus,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from 'lucide-react';
-import { Event } from '../lib/types';
-import { eventTypes, eventCategories, repeatOptions } from '../lib/mock-data';
+import { Event, EventType, EventCategory, RepeatOption } from '../lib/types';
+import { settingsApi } from '../lib/api';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 
 interface CreateEventPageProps {
   onSave: (event: Omit<Event, 'id'>) => void;
   onCancel: () => void;
 }
 
+// Valores padrão para fallback
+const defaultEventTypes: EventType[] = [
+  { id: '1', name: 'Reunião', color: '#3b82f6', icon: 'users' },
+  { id: '2', name: 'Tarefa', color: '#10b981', icon: 'check-circle' },
+  { id: '3', name: 'Compromisso', color: '#f59e0b', icon: 'calendar' },
+];
+
+const defaultEventCategories: EventCategory[] = [
+  { id: '1', name: 'Trabalho', color: '#3b82f6' },
+  { id: '2', name: 'Pessoal', color: '#10b981' },
+  { id: '3', name: 'Saúde', color: '#f59e0b' },
+];
+
+const defaultRepeatOptions: RepeatOption[] = [
+  { id: '1', name: 'Não repetir', value: 'none' },
+  { id: '2', name: 'Diariamente', value: 'daily' },
+  { id: '3', name: 'Semanalmente', value: 'weekly' },
+  { id: '4', name: 'Mensalmente', value: 'monthly' },
+];
+
 export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
+  // Carregar tipos, categorias e opções de repetição da API
+  const [eventTypes, setEventTypes] = useState<EventType[]>(defaultEventTypes);
+  const [eventCategories, setEventCategories] = useState<EventCategory[]>(defaultEventCategories);
+  const [repeatOptions, setRepeatOptions] = useState<RepeatOption[]>(defaultRepeatOptions);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const settings = await settingsApi.getAll();
+      
+      if (settings.eventTypes?.length > 0) {
+        setEventTypes(settings.eventTypes.map(t => ({
+          id: t.id,
+          name: t.name,
+          color: t.color,
+          icon: t.icon
+        })));
+      }
+      
+      if (settings.eventCategories?.length > 0) {
+        setEventCategories(settings.eventCategories.map(c => ({
+          id: c.id,
+          name: c.name,
+          color: c.color
+        })));
+      }
+      
+      if (settings.repeatOptions?.length > 0) {
+        setRepeatOptions(settings.repeatOptions.map(r => ({
+          id: r.id,
+          name: r.name,
+          value: r.value
+        })));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error);
+      toast.error('Usando configurações padrão', {
+        description: 'Não foi possível carregar suas configurações personalizadas.',
+      });
+    } finally {
+      setIsLoadingSettings(false);
+    }
+  };
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
