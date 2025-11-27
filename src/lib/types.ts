@@ -36,6 +36,7 @@ export interface RepeatOption {
   id: string;
   name: string;
   value: string;
+  active?: boolean; // Se não definido, considera como ativo
 }
 
 export interface User {

@@ -104,7 +104,8 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
       setRepeatOptions(settings.repeatOptions.map(r => ({
         id: r.id,
         name: r.name,
-        value: r.value
+        value: r.value,
+        active: r.active !== false // Se não definido, considera como ativo
       })));
       
       if (settings.generalSettings) {
@@ -280,6 +281,7 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
           id: createdOption.id,
           name: createdOption.name,
           value: createdOption.value,
+          active: true,
         };
         setRepeatOptions([...repeatOptions, repeat]);
         setNewRepeat({ name: '', value: '' });
@@ -290,6 +292,22 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
       } finally {
         setIsSaving(false);
       }
+    }
+  };
+
+  // Ativar/Inativar opção de repetição (soft delete)
+  const handleToggleRepeatActive = async (id: string, currentActive: boolean) => {
+    setIsSaving(true);
+    try {
+      const newActive = !currentActive;
+      await settingsApi.toggleRepeatOptionActive(id, newActive);
+      setRepeatOptions(repeatOptions.map((r) => (r.id === id ? { ...r, active: newActive } : r)));
+      toast.success(newActive ? 'Opção de repetição ativada!' : 'Opção de repetição inativada!');
+    } catch (error) {
+      console.error('Erro ao alterar status da opção de repetição:', error);
+      toast.error('Erro ao alterar status da opção de repetição');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -335,7 +353,7 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
   }
 
   return (
-    <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto h-full">
+    <div className="flex-1 bg-gray-50 p-4 sm:p-5 md:p-6 overflow-auto h-full">
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
         {/* Breadcrumb */}
         <motion.nav
@@ -715,59 +733,80 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
               <CardContent className="space-y-6">
                 {/* Lista de Opções */}
                 <div className="space-y-3">
-                  {repeatOptions.map((option) => (
-                    <div
-                      key={option.id}
-                      className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
-                    >
-                      {editingRepeat === option.id ? (
-                        <>
-                          <Input
-                            value={option.name}
-                            onChange={(e) =>
-                              handleUpdateRepeat(option.id, { name: e.target.value })
-                            }
-                            className="flex-1"
-                            placeholder="Nome da opção"
-                          />
-                          <Input
-                            value={option.value}
-                            onChange={(e) =>
-                              handleUpdateRepeat(option.id, { value: e.target.value })
-                            }
-                            className="flex-1"
-                            placeholder="Valor"
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingRepeat(null)}
-                          >
-                            <Save className="size-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <span className="flex-1">{option.name}</span>
-                          <Badge variant="secondary">{option.value}</Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setEditingRepeat(option.id)}
-                          >
-                            <Edit2 className="size-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeleteRepeat(option.id)}
-                          >
-                            <Trash2 className="size-4 text-red-600" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  ))}
+                  {repeatOptions.map((option) => {
+                    const isActive = option.active !== false;
+                    return (
+                      <div
+                        key={option.id}
+                        className={`flex items-center gap-3 p-4 rounded-lg transition-all ${
+                          isActive ? 'bg-gray-50' : 'bg-gray-100 opacity-60'
+                        }`}
+                      >
+                        {editingRepeat === option.id ? (
+                          <>
+                            <Input
+                              value={option.name}
+                              onChange={(e) =>
+                                handleUpdateRepeat(option.id, { name: e.target.value })
+                              }
+                              className="flex-1"
+                              placeholder="Nome da opção"
+                            />
+                            <Input
+                              value={option.value}
+                              onChange={(e) =>
+                                handleUpdateRepeat(option.id, { value: e.target.value })
+                              }
+                              className="flex-1"
+                              placeholder="Valor"
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingRepeat(null)}
+                            >
+                              <Save className="size-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Repeat className={`size-4 ${isActive ? 'text-teal-600' : 'text-gray-400'}`} />
+                            <span className={`flex-1 ${!isActive ? 'line-through text-gray-500' : ''}`}>
+                              {option.name}
+                            </span>
+                            {!isActive && (
+                              <Badge variant="outline" className="text-gray-500 border-gray-300">
+                                Inativo
+                              </Badge>
+                            )}
+                            <Badge variant="secondary" style={{ opacity: isActive ? 1 : 0.5 }}>
+                              {option.value}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingRepeat(option.id)}
+                              title="Editar"
+                            >
+                              <Edit2 className="size-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleToggleRepeatActive(option.id, isActive)}
+                              title={isActive ? 'Inativar' : 'Ativar'}
+                            >
+                              {isActive ? (
+                                <EyeOff className="size-4 text-orange-600" />
+                              ) : (
+                                <Eye className="size-4 text-green-600" />
+                              )}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Adicionar Nova Opção */}

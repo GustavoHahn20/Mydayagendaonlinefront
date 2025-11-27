@@ -100,11 +100,18 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
       }
       
       if (settings.repeatOptions?.length > 0) {
-        setRepeatOptions(settings.repeatOptions.map(r => ({
-          id: r.id,
-          name: r.name,
-          value: r.value
-        })));
+        // Filtrar apenas repetições ativas
+        const activeRepeatOptions = settings.repeatOptions
+          .filter(r => r.active !== false)
+          .map(r => ({
+            id: r.id,
+            name: r.name,
+            value: r.value,
+            active: r.active
+          }));
+        if (activeRepeatOptions.length > 0) {
+          setRepeatOptions(activeRepeatOptions);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
@@ -176,7 +183,7 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
   };
 
   return (
-    <div className="h-full min-h-0 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-y-auto">
+    <div className="h-full min-h-0 bg-gray-50 p-4 sm:p-5 md:p-6 overflow-y-auto">
       <div className="max-w-4xl mx-auto pb-6">
         {/* Breadcrumb */}
         <motion.nav

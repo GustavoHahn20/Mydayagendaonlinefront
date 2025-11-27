@@ -21,6 +21,7 @@ import {
 } from './lib/api';
 import { User } from './lib/types';
 import { Loader2 } from 'lucide-react';
+import { clearDismissedNotifications } from './lib/notifications';
 
 type Page = 'dashboard' | 'create' | 'search' | 'notifications' | 'profile' | 'settings';
 
@@ -51,6 +52,9 @@ export default function App() {
       if (authApi.isAuthenticated()) {
         const result = await authApi.validate();
         if (result.valid && result.user) {
+          // Limpar notificações dispensadas para que apareçam novamente ao logar
+          clearDismissedNotifications();
+          
           setUser(result.user as User);
           setIsLoggedIn(true);
         } else {
@@ -80,6 +84,9 @@ export default function App() {
   };
 
   const handleLogin = (userData: AuthResponse['user']) => {
+    // Limpar notificações dispensadas para que apareçam novamente ao logar
+    clearDismissedNotifications();
+    
     setUser(userData as User);
     setIsLoggedIn(true);
     toast.success('Bem-vindo ao MyDay!', {
@@ -237,7 +244,7 @@ export default function App() {
             exit="exit"
             variants={pageVariants}
             transition={{ duration: 0.3 }}
-            className="flex-1 min-h-0 flex flex-col overflow-hidden pt-14 pb-20 lg:pt-0 lg:pb-0"
+            className="flex-1 min-h-0 flex flex-col overflow-hidden pt-16 pb-24 lg:pt-0 lg:pb-0"
           >
             {currentPage === 'dashboard' && (
               <Dashboard

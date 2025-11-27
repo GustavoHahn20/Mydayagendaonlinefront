@@ -221,9 +221,9 @@ function WeekView({ events, currentDate, onEventClick, isMobile }: { events: Eve
     weekDays.push(day);
   }
 
-  // No mobile, mostrar apenas horários de trabalho (7h-20h)
-  const startHour = isMobile ? 7 : 0;
-  const endHour = isMobile ? 21 : 24;
+  // Mostrar horários do dia completo (0h-24h) em todas as telas
+  const startHour = 0;
+  const endHour = 24;
   const hours = Array.from({ length: endHour - startHour }, (_, i) => i + startHour);
   const hourHeight = isMobile ? 40 : 64; // altura em pixels por hora
 

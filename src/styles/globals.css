@@ -137,11 +137,28 @@ html {
 
 /* Safe area para dispositivos com notch */
 .safe-area-pb {
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-bottom: env(safe-area-inset-bottom, 8px);
 }
 
 .safe-area-pt {
   padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-area-inset {
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Espaçamento extra para mobile */
+@media (max-width: 768px) {
+  .mobile-safe-bottom {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+  
+  .mobile-content-padding {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 
 /* Melhorias de scroll */

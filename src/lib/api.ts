@@ -106,6 +106,7 @@ export interface RepeatOptionAPI {
   name: string;
   value: string;
   userId: string;
+  active?: boolean;
 }
 
 export interface GeneralSettingsAPI {
@@ -501,7 +502,7 @@ export const settingsApi = {
   createRepeatOption: async (data: Omit<RepeatOptionAPI, 'id' | 'userId'>): Promise<RepeatOptionAPI> => {
     return request<RepeatOptionAPI>('/api/repeat-options', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, active: true }),
     });
   },
 
@@ -509,6 +510,14 @@ export const settingsApi = {
     return request<RepeatOptionAPI>(`/api/repeat-options/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+  },
+
+  // Inativar opção de repetição (soft delete)
+  toggleRepeatOptionActive: async (id: string, active: boolean): Promise<RepeatOptionAPI> => {
+    return request<RepeatOptionAPI>(`/api/repeat-options/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ active }),
     });
   },
 

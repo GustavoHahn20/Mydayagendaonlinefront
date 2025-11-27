@@ -136,7 +136,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
     <>
       {/* Mobile Header - Botão de menu hamburguer */}
       <motion.div
-        className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm"
+        className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm safe-area-pt"
         initial={{ y: -60 }}
         animate={{ y: 0 }}
       >
@@ -190,7 +190,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
 
       {/* Mobile Bottom Navigation */}
       <motion.nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-2 py-2 safe-area-pb"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 py-3 safe-area-pb shadow-lg"
         initial={{ y: 100 }}
         animate={{ y: 0 }}
       >
@@ -204,13 +204,13 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
                 whileTap={{ scale: 0.9 }}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl min-w-[60px] transition-all ${
+                className={`flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl min-w-[64px] transition-all ${
                   isActive
                     ? 'text-indigo-600'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                <div className={`p-1.5 rounded-lg transition-all ${
+                <div className={`p-2 rounded-xl transition-all ${
                   isActive ? 'bg-indigo-100' : ''
                 }`}>
                   <Icon className="size-5" />
@@ -221,7 +221,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
                 {isActive && (
                   <motion.div
                     layoutId="bottomNavIndicator"
-                    className="absolute bottom-1 w-1 h-1 bg-indigo-600 rounded-full"
+                    className="absolute bottom-2 w-1 h-1 bg-indigo-600 rounded-full"
                   />
                 )}
               </motion.button>
@@ -232,9 +232,9 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
           <motion.button
             onClick={() => setIsMobileOpen(true)}
             whileTap={{ scale: 0.9 }}
-            className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl min-w-[60px] text-gray-500 hover:text-gray-700 transition-all"
+            className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl min-w-[64px] text-gray-500 hover:text-gray-700 transition-all"
           >
-            <div className="p-1.5 rounded-lg">
+            <div className="p-2 rounded-xl">
               <Menu className="size-5" />
             </div>
             <span className="text-[10px] font-medium">Mais</span>

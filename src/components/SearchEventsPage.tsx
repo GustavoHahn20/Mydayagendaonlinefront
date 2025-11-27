@@ -156,17 +156,27 @@ export function SearchEventsPage({ events, onEventClick }: SearchEventsPageProps
       return false;
     }
 
-    // Filtro de data de início
+    // Filtro de data de início (De)
     if (filters.startDate) {
       const filterDate = new Date(filters.startDate);
-      if (event.startDate < filterDate) {
+      // Define o início do dia (00:00:00.000)
+      filterDate.setHours(0, 0, 0, 0);
+      
+      // Compara apenas a parte da data do evento
+      const eventDateOnly = new Date(event.startDate);
+      eventDateOnly.setHours(0, 0, 0, 0);
+      
+      if (eventDateOnly < filterDate) {
         return false;
       }
     }
 
-    // Filtro de data de término
+    // Filtro de data de término (Até)
     if (filters.endDate) {
       const filterDate = new Date(filters.endDate);
+      // Define o final do dia (23:59:59.999) para incluir eventos do próprio dia
+      filterDate.setHours(23, 59, 59, 999);
+      
       if (event.startDate > filterDate) {
         return false;
       }
@@ -192,7 +202,7 @@ export function SearchEventsPage({ events, onEventClick }: SearchEventsPageProps
   ).length;
 
   return (
-    <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto h-full">
+    <div className="flex-1 bg-gray-50 p-4 sm:p-5 md:p-6 overflow-auto h-full">
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
         {/* Breadcrumb */}
         <motion.nav

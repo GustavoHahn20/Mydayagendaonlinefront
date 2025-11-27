@@ -124,11 +124,18 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
       }
       
       if (settings.repeatOptions?.length > 0) {
-        setRepeatOptions(settings.repeatOptions.map(r => ({
-          id: r.id,
-          name: r.name,
-          value: r.value
-        })));
+        // Filtrar apenas repetições ativas
+        const activeRepeatOptions = settings.repeatOptions
+          .filter(r => r.active !== false)
+          .map(r => ({
+            id: r.id,
+            name: r.name,
+            value: r.value,
+            active: r.active
+          }));
+        if (activeRepeatOptions.length > 0) {
+          setRepeatOptions(activeRepeatOptions);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);

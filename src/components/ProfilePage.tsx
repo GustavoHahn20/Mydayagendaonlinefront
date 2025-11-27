@@ -82,7 +82,7 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-auto h-full">
+    <div className="flex-1 bg-gray-50 p-4 sm:p-5 md:p-6 overflow-auto h-full">
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Breadcrumb */}
         <motion.nav
