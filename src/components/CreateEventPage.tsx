@@ -127,9 +127,9 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
     title: '',
     description: '',
     startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
+    endDate: '',
     startTime: '09:00',
-    endTime: '10:00',
+    endTime: '',
     type: 'Reunião',
     category: 'Trabalho',
     priority: 'medium' as 'low' | 'medium' | 'high',
@@ -156,27 +156,62 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
   // Data mínima permitida (hoje)
   const today = new Date();
   const minDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  
+  // Data máxima permitida (2 anos a partir de hoje)
+  const maxDateObj = new Date();
+  maxDateObj.setFullYear(maxDateObj.getFullYear() + 2);
+  const maxDate = `${maxDateObj.getFullYear()}-${String(maxDateObj.getMonth() + 1).padStart(2, '0')}-${String(maxDateObj.getDate()).padStart(2, '0')}`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validar se a data não está no passado
-    const selectedDate = new Date(formData.startDate + 'T00:00:00');
+    const selectedStartDate = new Date(formData.startDate + 'T00:00:00');
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     
-    if (selectedDate < todayStart) {
+    if (selectedStartDate < todayStart) {
       toast.error('Data inválida', {
         description: 'Não é possível criar eventos para datas passadas.',
       });
       return;
     }
     
+    // Validar se a data não está mais de 2 anos no futuro
+    const maxAllowedDate = new Date();
+    maxAllowedDate.setFullYear(maxAllowedDate.getFullYear() + 2);
+    maxAllowedDate.setHours(23, 59, 59, 999);
+    
+    if (selectedStartDate > maxAllowedDate) {
+      toast.error('Data inválida', {
+        description: 'Não é possível criar eventos para mais de 2 anos no futuro.',
+      });
+      return;
+    }
+    
+    // Validar data de término se informada
+    if (formData.endDate) {
+      const selectedEndDate = new Date(formData.endDate + 'T00:00:00');
+      if (selectedEndDate > maxAllowedDate) {
+        toast.error('Data inválida', {
+          description: 'Não é possível criar eventos para mais de 2 anos no futuro.',
+        });
+        return;
+      }
+      if (selectedEndDate < selectedStartDate) {
+        toast.error('Data inválida', {
+          description: 'A data de término não pode ser anterior à data de início.',
+        });
+        return;
+      }
+    }
+    
     // Criar datas preservando o fuso horário local (adiciona T00:00:00 para evitar conversão UTC)
     const newEvent: Omit<Event, 'id'> = {
       ...formData,
       startDate: new Date(formData.startDate + 'T00:00:00'),
-      endDate: new Date(formData.endDate + 'T00:00:00'),
+      endDate: formData.endDate ? new Date(formData.endDate + 'T00:00:00') : undefined,
+      endTime: formData.endTime || undefined,
     };
     
     onSave(newEvent);
@@ -344,20 +379,22 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
                     type="date"
                     value={formData.startDate}
                     min={minDate}
+                    max={maxDate}
                     onChange={(e) => updateField('startDate', e.target.value)}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="endDate">Data de Término *</Label>
+                  <Label htmlFor="endDate">Data de Término</Label>
                   <Input
                     id="endDate"
                     type="date"
                     value={formData.endDate}
                     min={formData.startDate || minDate}
+                    max={maxDate}
                     onChange={(e) => updateField('endDate', e.target.value)}
-                    required
+                    placeholder="Opcional"
                   />
                 </div>
               </div>
@@ -378,13 +415,13 @@ export function CreateEventPage({ onSave, onCancel }: CreateEventPageProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="endTime">Hora de Término *</Label>
+                  <Label htmlFor="endTime">Hora de Término</Label>
                   <Input
                     id="endTime"
                     type="time"
                     value={formData.endTime}
                     onChange={(e) => updateField('endTime', e.target.value)}
-                    required
+                    placeholder="Opcional"
                   />
                 </div>
               </div>

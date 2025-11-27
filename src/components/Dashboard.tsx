@@ -84,13 +84,7 @@ export function Dashboard({ events, onEventUpdate, onEventDelete, onCreateEvent,
               <h1 className="text-xl sm:text-2xl lg:text-3xl text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-semibold">
                 Seu Dia
               </h1>
-              <motion.span
-                className="text-lg sm:text-2xl"
-                animate={{ rotate: [0, 10, -10, 10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                ✨
-              </motion.span>
+              <span className="text-lg sm:text-2xl">✨</span>
             </div>
             <p className="text-sm sm:text-base text-gray-600">
               {new Date().toLocaleDateString('pt-BR', { 
@@ -205,6 +199,7 @@ export function Dashboard({ events, onEventUpdate, onEventDelete, onCreateEvent,
               events={events}
               view={view}
               onEventClick={handleEventClick}
+              onViewChange={setView}
             />
           </motion.div>
 
@@ -240,7 +235,7 @@ export function Dashboard({ events, onEventUpdate, onEventDelete, onCreateEvent,
                       </div>
                       <p className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                         <Clock className="size-3" />
-                        {event.startTime} - {event.endTime}
+                        {event.startTime}{event.endTime ? ` - ${event.endTime}` : ''}
                       </p>
                     </motion.button>
                   ))}

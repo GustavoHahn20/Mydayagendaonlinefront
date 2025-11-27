@@ -36,6 +36,7 @@ import {
 import { Event, EventType, EventCategory, RepeatOption } from '../lib/types';
 import { settingsApi } from '../lib/api';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 
 // Valores padrão para fallback
 const defaultEventTypes: EventType[] = [
@@ -149,6 +150,51 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
 
   const handleSave = () => {
     if (editedEvent) {
+      // Validar se a data não está no passado
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const eventStartDate = new Date(editedEvent.startDate);
+      eventStartDate.setHours(0, 0, 0, 0);
+      
+      if (eventStartDate < todayStart) {
+        toast.error('Data inválida', {
+          description: 'Não é possível salvar eventos para datas passadas.',
+        });
+        return;
+      }
+      
+      // Validar se a data não está mais de 2 anos no futuro
+      const maxAllowedDate = new Date();
+      maxAllowedDate.setFullYear(maxAllowedDate.getFullYear() + 2);
+      maxAllowedDate.setHours(23, 59, 59, 999);
+      
+      if (eventStartDate > maxAllowedDate) {
+        toast.error('Data inválida', {
+          description: 'Não é possível salvar eventos para mais de 2 anos no futuro.',
+        });
+        return;
+      }
+      
+      // Validar data de término se informada
+      if (editedEvent.endDate) {
+        const eventEndDate = new Date(editedEvent.endDate);
+        eventEndDate.setHours(0, 0, 0, 0);
+        
+        if (eventEndDate > maxAllowedDate) {
+          toast.error('Data inválida', {
+            description: 'Não é possível salvar eventos para mais de 2 anos no futuro.',
+          });
+          return;
+        }
+        if (eventEndDate < eventStartDate) {
+          toast.error('Data inválida', {
+            description: 'A data de término não pode ser anterior à data de início.',
+          });
+          return;
+        }
+      }
+      
       onSave(editedEvent);
       setIsEditing(false);
       onClose();
@@ -177,6 +223,15 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
   if (!event && !editedEvent) return null;
 
   const displayEvent = editedEvent || event!;
+  
+  // Data mínima permitida (hoje)
+  const today = new Date();
+  const minDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  
+  // Data máxima permitida (2 anos a partir de hoje)
+  const maxDateObj = new Date();
+  maxDateObj.setFullYear(maxDateObj.getFullYear() + 2);
+  const maxDate = `${maxDateObj.getFullYear()}-${String(maxDateObj.getMonth() + 1).padStart(2, '0')}-${String(maxDateObj.getDate()).padStart(2, '0')}`;
 
   const priorityColors = {
     low: 'bg-green-100 text-green-800',
@@ -317,6 +372,8 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
                     <Input
                       type="date"
                       value={`${displayEvent.startDate.getFullYear()}-${String(displayEvent.startDate.getMonth() + 1).padStart(2, '0')}-${String(displayEvent.startDate.getDate()).padStart(2, '0')}`}
+                      min={minDate}
+                      max={maxDate}
                       onChange={(e) => updateField('startDate', new Date(e.target.value + 'T00:00:00'))}
                       className="transition-all focus:ring-2 focus:ring-blue-500"
                     />
@@ -335,13 +392,15 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
                   {isEditing ? (
                     <Input
                       type="date"
-                      value={`${displayEvent.endDate.getFullYear()}-${String(displayEvent.endDate.getMonth() + 1).padStart(2, '0')}-${String(displayEvent.endDate.getDate()).padStart(2, '0')}`}
-                      onChange={(e) => updateField('endDate', new Date(e.target.value + 'T00:00:00'))}
+                      value={displayEvent.endDate ? `${displayEvent.endDate.getFullYear()}-${String(displayEvent.endDate.getMonth() + 1).padStart(2, '0')}-${String(displayEvent.endDate.getDate()).padStart(2, '0')}` : ''}
+                      min={minDate}
+                      max={maxDate}
+                      onChange={(e) => updateField('endDate', e.target.value ? new Date(e.target.value + 'T00:00:00') : undefined)}
                       className="transition-all focus:ring-2 focus:ring-blue-500"
                     />
                   ) : (
                     <p className="text-gray-700">
-                      {displayEvent.endDate.toLocaleDateString('pt-BR')}
+                      {displayEvent.endDate ? displayEvent.endDate.toLocaleDateString('pt-BR') : <span className="text-gray-400 italic">Não informado</span>}
                     </p>
                   )}
                 </div>
@@ -374,12 +433,14 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
                   {isEditing ? (
                     <Input
                       type="time"
-                      value={displayEvent.endTime}
-                      onChange={(e) => updateField('endTime', e.target.value)}
+                      value={displayEvent.endTime || ''}
+                      onChange={(e) => updateField('endTime', e.target.value || undefined)}
                       className="transition-all focus:ring-2 focus:ring-blue-500"
                     />
                   ) : (
-                    <p className="text-gray-700">{displayEvent.endTime}</p>
+                    <p className="text-gray-700">
+                      {displayEvent.endTime || <span className="text-gray-400 italic">Não informado</span>}
+                    </p>
                   )}
                 </div>
               </div>

@@ -3,9 +3,9 @@ export interface Event {
   title: string;
   description: string;
   startDate: Date;
-  endDate: Date;
+  endDate?: Date;
   startTime: string;
-  endTime: string;
+  endTime?: string;
   type: string;
   category: string;
   priority: 'low' | 'medium' | 'high';

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Bell, Clock, Calendar, ChevronRight } from 'lucide-react';
+import { X, Bell, Clock, Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Event } from '../lib/types';
 import { 
@@ -51,6 +51,14 @@ export function NotificationBanner({ events, onViewAll, onEventClick }: Notifica
 
   const currentNotification = notifications[currentIndex];
   const hasMultiple = notifications.length > 1;
+
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? notifications.length - 1 : prev - 1));
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev === notifications.length - 1 ? 0 : prev + 1));
+  };
 
   const getTypeIcon = (type: Notification['type']) => {
     switch (type) {
@@ -116,23 +124,48 @@ export function NotificationBanner({ events, onViewAll, onEventClick }: Notifica
             
             {/* Navegação entre notificações */}
             {hasMultiple && (
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex gap-1">
-                  {notifications.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentIndex(idx)}
-                      className={`size-1.5 rounded-full transition-all ${
-                        idx === currentIndex 
-                          ? 'bg-gray-700 w-3' 
-                          : 'bg-gray-300 hover:bg-gray-400'
-                      }`}
-                    />
-                  ))}
+              <div className="flex items-center gap-3 mt-3">
+                {/* Botão Anterior */}
+                <motion.button
+                  onClick={goToPrevious}
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white/60 hover:bg-white border border-gray-200 text-gray-600 hover:text-gray-900 transition-all text-xs font-medium"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <ChevronLeft className="size-4" />
+                  <span className="hidden sm:inline">Anterior</span>
+                </motion.button>
+
+                {/* Indicador de posição */}
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1.5">
+                    {notifications.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentIndex(idx)}
+                        className={`rounded-full transition-all ${
+                          idx === currentIndex 
+                            ? 'bg-gray-700 w-4 h-2' 
+                            : 'bg-gray-300 hover:bg-gray-400 size-2'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-500 font-medium">
+                    {currentIndex + 1}/{notifications.length}
+                  </span>
                 </div>
-                <span className="text-[10px] text-gray-500">
-                  {currentIndex + 1} de {notifications.length}
-                </span>
+
+                {/* Botão Próximo */}
+                <motion.button
+                  onClick={goToNext}
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white/60 hover:bg-white border border-gray-200 text-gray-600 hover:text-gray-900 transition-all text-xs font-medium"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <span className="hidden sm:inline">Próximo</span>
+                  <ChevronRight className="size-4" />
+                </motion.button>
               </div>
             )}
           </div>

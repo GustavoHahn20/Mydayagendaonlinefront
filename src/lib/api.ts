@@ -48,9 +48,9 @@ export interface EventAPI {
   title: string;
   description?: string;
   startDate: string;
-  endDate: string;
+  endDate?: string;
   startTime: string;
-  endTime: string;
+  endTime?: string;
   type: string;
   category: string;
   priority: string;
@@ -69,9 +69,9 @@ export interface CreateEventRequest {
   title: string;
   description?: string;
   startDate: string;
-  endDate: string;
+  endDate?: string;
   startTime: string;
-  endTime: string;
+  endTime?: string;
   type?: string;
   category?: string;
   priority?: string;
@@ -563,9 +563,9 @@ export function apiEventToLocal(event: EventAPI): import('./types').Event {
     title: event.title,
     description: event.description || '',
     startDate: parseDateLocal(event.startDate),
-    endDate: parseDateLocal(event.endDate),
+    endDate: event.endDate ? parseDateLocal(event.endDate) : undefined,
     startTime: event.startTime,
-    endTime: event.endTime,
+    endTime: event.endTime || undefined,
     type: event.type,
     category: event.category,
     priority: event.priority as 'low' | 'medium' | 'high',
@@ -592,9 +592,9 @@ export function localEventToApi(event: import('./types').Event): CreateEventRequ
     title: event.title,
     description: event.description,
     startDate: formatDateLocal(event.startDate),
-    endDate: formatDateLocal(event.endDate),
+    endDate: event.endDate ? formatDateLocal(event.endDate) : undefined,
     startTime: event.startTime,
-    endTime: event.endTime,
+    endTime: event.endTime || undefined,
     type: event.type,
     category: event.category,
     priority: event.priority,
