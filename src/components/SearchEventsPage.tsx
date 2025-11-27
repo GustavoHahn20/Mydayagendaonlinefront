@@ -158,11 +158,10 @@ export function SearchEventsPage({ events, onEventClick }: SearchEventsPageProps
 
     // Filtro de data de início (De)
     if (filters.startDate) {
-      const filterDate = new Date(filters.startDate);
-      // Define o início do dia (00:00:00.000)
-      filterDate.setHours(0, 0, 0, 0);
+      // Criar data no fuso horário local adicionando T00:00:00
+      const filterDate = new Date(filters.startDate + 'T00:00:00');
       
-      // Compara apenas a parte da data do evento
+      // Compara apenas a parte da data do evento (ano, mês, dia)
       const eventDateOnly = new Date(event.startDate);
       eventDateOnly.setHours(0, 0, 0, 0);
       
@@ -173,11 +172,14 @@ export function SearchEventsPage({ events, onEventClick }: SearchEventsPageProps
 
     // Filtro de data de término (Até)
     if (filters.endDate) {
-      const filterDate = new Date(filters.endDate);
-      // Define o final do dia (23:59:59.999) para incluir eventos do próprio dia
-      filterDate.setHours(23, 59, 59, 999);
+      // Criar data no fuso horário local adicionando T23:59:59
+      const filterDate = new Date(filters.endDate + 'T23:59:59.999');
       
-      if (event.startDate > filterDate) {
+      // Compara apenas a parte da data do evento (ano, mês, dia)
+      const eventDateOnly = new Date(event.startDate);
+      eventDateOnly.setHours(0, 0, 0, 0);
+      
+      if (eventDateOnly > filterDate) {
         return false;
       }
     }
