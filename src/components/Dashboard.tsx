@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, Plus, TrendingUp, Clock, Calendar as Calendar
 import { CalendarView, Event } from '../lib/types';
 import { CalendarViewComponent } from './CalendarView';
 import { EventDialog } from './EventDialog';
+import { NotificationBanner } from './NotificationBanner';
 import { motion } from 'motion/react';
 
 interface DashboardProps {
@@ -12,9 +13,10 @@ interface DashboardProps {
   onEventUpdate: (event: Event) => void;
   onEventDelete: (eventId: string) => void;
   onCreateEvent: () => void;
+  onNavigateToNotifications: () => void;
 }
 
-export function Dashboard({ events, onEventUpdate, onEventDelete, onCreateEvent }: DashboardProps) {
+export function Dashboard({ events, onEventUpdate, onEventDelete, onCreateEvent, onNavigateToNotifications }: DashboardProps) {
   const [view, setView] = useState<CalendarView>('month');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -108,7 +110,13 @@ export function Dashboard({ events, onEventUpdate, onEventDelete, onCreateEvent 
               <span className="sm:inline">Criar Evento</span>
             </Button>
           </motion.div>
-        </motion.div>
+          </motion.div>
+
+        {/* Banner de Notificações */}
+        <NotificationBanner 
+          events={events} 
+          onViewAll={onNavigateToNotifications}
+        />
 
         {/* Stats Cards */}
         <motion.div

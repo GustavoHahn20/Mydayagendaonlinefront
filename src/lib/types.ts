@@ -22,12 +22,14 @@ export interface EventType {
   name: string;
   color: string;
   icon: string;
+  active?: boolean; // Se não definido, considera como ativo
 }
 
 export interface EventCategory {
   id: string;
   name: string;
   color: string;
+  active?: boolean; // Se não definido, considera como ativo
 }
 
 export interface RepeatOption {

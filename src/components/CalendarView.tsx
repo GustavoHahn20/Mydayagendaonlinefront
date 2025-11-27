@@ -195,6 +195,21 @@ function MonthView({ events, currentDate, onEventClick, isMobile }: { events: Ev
   );
 }
 
+// Helper para calcular duração do evento em horas
+function getEventDuration(startTime: string, endTime: string): number {
+  const [startHour, startMin] = startTime.split(':').map(Number);
+  const [endHour, endMin] = endTime.split(':').map(Number);
+  const startMinutes = startHour * 60 + startMin;
+  const endMinutes = endHour * 60 + endMin;
+  return (endMinutes - startMinutes) / 60;
+}
+
+// Helper para calcular offset do evento (minutos após a hora cheia)
+function getEventOffset(startTime: string): number {
+  const [, startMin] = startTime.split(':').map(Number);
+  return startMin / 60;
+}
+
 function WeekView({ events, currentDate, onEventClick, isMobile }: { events: Event[], currentDate: Date, onEventClick: (event: Event) => void, isMobile: boolean }) {
   const startOfWeek = new Date(currentDate);
   startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
@@ -207,16 +222,20 @@ function WeekView({ events, currentDate, onEventClick, isMobile }: { events: Eve
   }
 
   // No mobile, mostrar apenas horários de trabalho (7h-20h)
-  const hours = isMobile ? Array.from({ length: 14 }, (_, i) => i + 7) : Array.from({ length: 24 }, (_, i) => i);
+  const startHour = isMobile ? 7 : 0;
+  const endHour = isMobile ? 21 : 24;
+  const hours = Array.from({ length: endHour - startHour }, (_, i) => i + startHour);
+  const hourHeight = isMobile ? 40 : 64; // altura em pixels por hora
 
   return (
     <div className="overflow-x-auto -mx-2 sm:mx-0">
-      <div className={`grid gap-1 sm:gap-2 ${isMobile ? 'grid-cols-8 min-w-[500px]' : 'grid-cols-8 min-w-[800px]'}`}>
-        <div className="text-xs sm:text-sm text-gray-600 sticky left-0 bg-white z-10"></div>
+      <div className={`grid ${isMobile ? 'grid-cols-8 min-w-[500px]' : 'grid-cols-8 min-w-[800px]'}`}>
+        {/* Header com dias da semana */}
+        <div className="text-xs sm:text-sm text-gray-600 sticky left-0 bg-white z-10 border-b border-gray-200 pb-2"></div>
         {weekDays.map((day) => {
           const isToday = day.toDateString() === new Date().toDateString();
           return (
-            <div key={day.toISOString()} className="text-center">
+            <div key={day.toISOString()} className="text-center border-b border-gray-200 pb-2">
               <div className={`text-[10px] sm:text-sm ${isToday ? 'text-blue-600 font-semibold' : 'text-gray-600'}`}>
                 {isMobile ? day.toLocaleDateString('pt-BR', { weekday: 'narrow' }) : day.toLocaleDateString('pt-BR', { weekday: 'short' })}
               </div>
@@ -227,31 +246,70 @@ function WeekView({ events, currentDate, onEventClick, isMobile }: { events: Eve
           );
         })}
 
-        {hours.map((hour) => (
-          <React.Fragment key={`hour-row-${hour}`}>
-            <div className="text-[10px] sm:text-sm text-gray-600 py-4 sm:py-8 border-t sticky left-0 bg-white z-10">
+        {/* Coluna de horas */}
+        <div className="sticky left-0 bg-white z-10">
+          {hours.map((hour) => (
+            <div 
+              key={`hour-label-${hour}`} 
+              className="text-[10px] sm:text-sm text-gray-600 border-t border-gray-100 pr-2 text-right"
+              style={{ height: `${hourHeight}px` }}
+            >
               {hour.toString().padStart(2, '0')}:00
             </div>
-            {weekDays.map((day) => {
-              const dayEvents = events.filter((event) => {
-                if (event.startDate.toDateString() !== day.toDateString()) return false;
-                const eventHour = parseInt(event.startTime.split(':')[0]);
-                return eventHour === hour;
-              });
+          ))}
+        </div>
 
-              return (
-                <div key={`${day.toISOString()}-${hour}`} className="border-t border-gray-200 py-0.5 sm:py-1 min-h-10 sm:min-h-16">
-                  {dayEvents.map((event) => (
-                    <button key={event.id} onClick={() => onEventClick(event)} className="w-full text-left text-[9px] sm:text-xs p-1 sm:p-2 rounded mb-0.5 sm:mb-1 hover:opacity-80 transition-opacity" style={{ backgroundColor: event.color, color: 'white' }}>
-                      <div className="truncate">{event.title}</div>
-                      {!isMobile && <div className="opacity-90">{event.startTime} - {event.endTime}</div>}
-                    </button>
-                  ))}
-                </div>
-              );
-            })}
-          </React.Fragment>
-        ))}
+        {/* Colunas dos dias com eventos */}
+        {weekDays.map((day) => {
+          const dayEvents = events.filter((event) => event.startDate.toDateString() === day.toDateString());
+          
+          return (
+            <div key={day.toISOString()} className="relative border-l border-gray-200">
+              {/* Linhas de grade das horas */}
+              {hours.map((hour) => (
+                <div 
+                  key={`grid-${day.toISOString()}-${hour}`}
+                  className="border-t border-gray-100"
+                  style={{ height: `${hourHeight}px` }}
+                />
+              ))}
+              
+              {/* Eventos posicionados absolutamente */}
+              {dayEvents.map((event) => {
+                const eventStartHour = parseInt(event.startTime.split(':')[0]);
+                const eventStartMin = parseInt(event.startTime.split(':')[1] || '0');
+                
+                // Só mostrar se o evento estiver dentro do range de horas visíveis
+                if (eventStartHour < startHour || eventStartHour >= endHour) return null;
+                
+                const duration = getEventDuration(event.startTime, event.endTime);
+                const offset = getEventOffset(event.startTime);
+                const top = (eventStartHour - startHour + offset) * hourHeight;
+                const height = Math.max(duration * hourHeight, hourHeight * 0.5); // mínimo de meia hora
+                
+                return (
+                  <button
+                    key={event.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEventClick(event);
+                    }}
+                    className="absolute left-0.5 right-0.5 sm:left-1 sm:right-1 text-left text-[9px] sm:text-xs p-1 sm:p-2 rounded overflow-hidden hover:opacity-90 transition-opacity shadow-sm z-10"
+                    style={{ 
+                      backgroundColor: event.color, 
+                      color: 'white',
+                      top: `${top}px`,
+                      height: `${height - 2}px`,
+                    }}
+                  >
+                    <div className="font-medium truncate">{event.title}</div>
+                    {height > 30 && <div className="opacity-90 truncate">{event.startTime} - {event.endTime}</div>}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -262,41 +320,72 @@ function DayView({ events, currentDate, onEventClick }: { events: Event[], curre
   const dayEvents = events.filter(
     (event) => event.startDate.toDateString() === currentDate.toDateString()
   );
+  const hourHeight = 64; // altura em pixels por hora
 
   return (
-    <div className="space-y-2">
-      {hours.map((hour) => {
-        const hourEvents = dayEvents.filter((event) => {
-          const eventHour = parseInt(event.startTime.split(':')[0]);
-          return eventHour === hour;
-        });
-
-        return (
-          <div key={hour} className="flex gap-4 border-t border-gray-200 py-2">
-            <div className="w-20 text-sm text-gray-600">
+    <div className="relative">
+      {/* Grade de horas */}
+      <div className="flex">
+        {/* Coluna de labels das horas */}
+        <div className="w-20 flex-shrink-0">
+          {hours.map((hour) => (
+            <div 
+              key={`label-${hour}`} 
+              className="text-sm text-gray-600 border-t border-gray-100"
+              style={{ height: `${hourHeight}px` }}
+            >
               {hour.toString().padStart(2, '0')}:00
             </div>
-            <div className="flex-1 space-y-2">
-              {hourEvents.map((event) => (
-                <button
-                  key={event.id}
-                  onClick={() => onEventClick(event)}
-                  className="w-full text-left p-3 rounded-lg hover:opacity-80 transition-opacity"
-                  style={{ backgroundColor: event.color, color: 'white' }}
-                >
-                  <div>{event.title}</div>
-                  <div className="text-sm opacity-90">
-                    {event.startTime} - {event.endTime}
-                  </div>
-                  {event.location && (
-                    <div className="text-sm opacity-90 mt-1">{event.location}</div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+          ))}
+        </div>
+
+        {/* Coluna de eventos */}
+        <div className="flex-1 relative border-l border-gray-200">
+          {/* Linhas de grade */}
+          {hours.map((hour) => (
+            <div 
+              key={`grid-${hour}`}
+              className="border-t border-gray-100"
+              style={{ height: `${hourHeight}px` }}
+            />
+          ))}
+
+          {/* Eventos posicionados absolutamente */}
+          {dayEvents.map((event) => {
+            const eventStartHour = parseInt(event.startTime.split(':')[0]);
+            const eventStartMin = parseInt(event.startTime.split(':')[1] || '0');
+            const duration = getEventDuration(event.startTime, event.endTime);
+            const offset = eventStartMin / 60;
+            const top = (eventStartHour + offset) * hourHeight;
+            const height = Math.max(duration * hourHeight, hourHeight * 0.5);
+            
+            return (
+              <button
+                key={event.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEventClick(event);
+                }}
+                className="absolute left-2 right-2 text-left p-3 rounded-lg hover:opacity-90 transition-opacity shadow-md z-10"
+                style={{ 
+                  backgroundColor: event.color, 
+                  color: 'white',
+                  top: `${top}px`,
+                  height: `${height - 4}px`,
+                }}
+              >
+                <div className="font-medium">{event.title}</div>
+                <div className="text-sm opacity-90">
+                  {event.startTime} - {event.endTime}
+                </div>
+                {height > 80 && event.location && (
+                  <div className="text-sm opacity-90 mt-1">{event.location}</div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

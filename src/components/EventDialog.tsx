@@ -75,6 +75,12 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
   const [eventCategories, setEventCategories] = useState<EventCategory[]>(defaultEventCategories);
   const [repeatOptions, setRepeatOptions] = useState<RepeatOption[]>(defaultRepeatOptions);
 
+  // Sincronizar editedEvent quando o event prop mudar
+  useEffect(() => {
+    setEditedEvent(event);
+    setIsEditing(false); // Resetar modo de edição ao trocar de evento
+  }, [event]);
+
   // Carregar configurações da API quando o dialog abrir
   useEffect(() => {
     if (open) {
@@ -87,20 +93,34 @@ export function EventDialog({ event, open, onClose, onSave, onDelete }: EventDia
       const settings = await settingsApi.getAll();
       
       if (settings.eventTypes?.length > 0) {
-        setEventTypes(settings.eventTypes.map(t => ({
-          id: t.id,
-          name: t.name,
-          color: t.color,
-          icon: t.icon
-        })));
+        // Filtrar apenas tipos ativos
+        const activeTypes = settings.eventTypes
+          .filter(t => t.active !== false)
+          .map(t => ({
+            id: t.id,
+            name: t.name,
+            color: t.color,
+            icon: t.icon,
+            active: t.active
+          }));
+        if (activeTypes.length > 0) {
+          setEventTypes(activeTypes);
+        }
       }
       
       if (settings.eventCategories?.length > 0) {
-        setEventCategories(settings.eventCategories.map(c => ({
-          id: c.id,
-          name: c.name,
-          color: c.color
-        })));
+        // Filtrar apenas categorias ativas
+        const activeCategories = settings.eventCategories
+          .filter(c => c.active !== false)
+          .map(c => ({
+            id: c.id,
+            name: c.name,
+            color: c.color,
+            active: c.active
+          }));
+        if (activeCategories.length > 0) {
+          setEventCategories(activeCategories);
+        }
       }
       
       if (settings.repeatOptions?.length > 0) {

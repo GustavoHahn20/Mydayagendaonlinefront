@@ -90,6 +90,7 @@ export interface EventTypeAPI {
   color: string;
   icon: string;
   userId: string;
+  active?: boolean;
 }
 
 export interface EventCategoryAPI {
@@ -97,6 +98,7 @@ export interface EventCategoryAPI {
   name: string;
   color: string;
   userId: string;
+  active?: boolean;
 }
 
 export interface RepeatOptionAPI {
@@ -433,7 +435,7 @@ export const settingsApi = {
   createEventType: async (data: Omit<EventTypeAPI, 'id' | 'userId'>): Promise<EventTypeAPI> => {
     return request<EventTypeAPI>('/api/event-types', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, active: true }),
     });
   },
 
@@ -441,6 +443,14 @@ export const settingsApi = {
     return request<EventTypeAPI>(`/api/event-types/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+  },
+
+  // Inativar tipo de evento (soft delete)
+  toggleEventTypeActive: async (id: string, active: boolean): Promise<EventTypeAPI> => {
+    return request<EventTypeAPI>(`/api/event-types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ active }),
     });
   },
 
@@ -458,7 +468,7 @@ export const settingsApi = {
   createEventCategory: async (data: Omit<EventCategoryAPI, 'id' | 'userId'>): Promise<EventCategoryAPI> => {
     return request<EventCategoryAPI>('/api/categories', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, active: true }),
     });
   },
 
@@ -466,6 +476,14 @@ export const settingsApi = {
     return request<EventCategoryAPI>(`/api/categories/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+  },
+
+  // Inativar categoria (soft delete)
+  toggleEventCategoryActive: async (id: string, active: boolean): Promise<EventCategoryAPI> => {
+    return request<EventCategoryAPI>(`/api/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ active }),
     });
   },
 

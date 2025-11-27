@@ -17,7 +17,11 @@ import {
   X,
   Home,
   ChevronRight,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff,
+  Power,
+  PowerOff
 } from 'lucide-react';
 import { EventType, EventCategory, RepeatOption } from '../lib/types';
 import { 
@@ -86,13 +90,15 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
         id: t.id,
         name: t.name,
         color: t.color,
-        icon: t.icon
+        icon: t.icon,
+        active: t.active !== false // Se não definido, considera como ativo
       })));
       
       setEventCategories(settings.eventCategories.map(c => ({
         id: c.id,
         name: c.name,
-        color: c.color
+        color: c.color,
+        active: c.active !== false // Se não definido, considera como ativo
       })));
       
       setRepeatOptions(settings.repeatOptions.map(r => ({
@@ -150,6 +156,7 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
           name: createdType.name,
           color: createdType.color,
           icon: createdType.icon,
+          active: true,
         };
         setEventTypes([...eventTypes, type]);
         setNewType({ name: '', color: '#3b82f6', icon: 'calendar' });
@@ -163,15 +170,17 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
     }
   };
 
-  const handleDeleteType = async (id: string) => {
+  // Ativar/Inativar tipo de evento (soft delete)
+  const handleToggleTypeActive = async (id: string, currentActive: boolean) => {
     setIsSaving(true);
     try {
-      await settingsApi.deleteEventType(id);
-      setEventTypes(eventTypes.filter((t) => t.id !== id));
-      toast.success('Tipo de evento removido!');
+      const newActive = !currentActive;
+      await settingsApi.toggleEventTypeActive(id, newActive);
+      setEventTypes(eventTypes.map((t) => (t.id === id ? { ...t, active: newActive } : t)));
+      toast.success(newActive ? 'Tipo de evento ativado!' : 'Tipo de evento inativado!');
     } catch (error) {
-      console.error('Erro ao remover tipo:', error);
-      toast.error('Erro ao remover tipo de evento');
+      console.error('Erro ao alterar status do tipo:', error);
+      toast.error('Erro ao alterar status do tipo de evento');
     } finally {
       setIsSaving(false);
     }
@@ -202,6 +211,7 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
           id: createdCategory.id,
           name: createdCategory.name,
           color: createdCategory.color,
+          active: true,
         };
         setEventCategories([...eventCategories, category]);
         setNewCategory({ name: '', color: '#3b82f6' });
@@ -212,6 +222,22 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
       } finally {
         setIsSaving(false);
       }
+    }
+  };
+
+  // Ativar/Inativar categoria (soft delete)
+  const handleToggleCategoryActive = async (id: string, currentActive: boolean) => {
+    setIsSaving(true);
+    try {
+      const newActive = !currentActive;
+      await settingsApi.toggleEventCategoryActive(id, newActive);
+      setEventCategories(eventCategories.map((c) => (c.id === id ? { ...c, active: newActive } : c)));
+      toast.success(newActive ? 'Categoria ativada!' : 'Categoria inativada!');
+    } catch (error) {
+      console.error('Erro ao alterar status da categoria:', error);
+      toast.error('Erro ao alterar status da categoria');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -464,60 +490,78 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
               <CardContent className="space-y-6">
                 {/* Lista de Tipos */}
                 <div className="space-y-3">
-                  {eventTypes.map((type) => (
-                    <div
-                      key={type.id}
-                      className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
-                    >
-                      {editingType === type.id ? (
-                        <>
-                          <Input
-                            value={type.name}
-                            onChange={(e) => handleUpdateType(type.id, { name: e.target.value })}
-                            className="flex-1"
-                          />
-                          <Input
-                            type="color"
-                            value={type.color}
-                            onChange={(e) => handleUpdateType(type.id, { color: e.target.value })}
-                            className="w-20"
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingType(null)}
-                          >
-                            <Save className="size-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <div
-                            className="size-4 rounded"
-                            style={{ backgroundColor: type.color }}
-                          />
-                          <span className="flex-1">{type.name}</span>
-                          <Badge style={{ backgroundColor: type.color, color: 'white' }}>
-                            {type.name}
-                          </Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setEditingType(type.id)}
-                          >
-                            <Edit2 className="size-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeleteType(type.id)}
-                          >
-                            <Trash2 className="size-4 text-red-600" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  ))}
+                  {eventTypes.map((type) => {
+                    const isActive = type.active !== false;
+                    return (
+                      <div
+                        key={type.id}
+                        className={`flex items-center gap-3 p-4 rounded-lg transition-all ${
+                          isActive ? 'bg-gray-50' : 'bg-gray-100 opacity-60'
+                        }`}
+                      >
+                        {editingType === type.id ? (
+                          <>
+                            <Input
+                              value={type.name}
+                              onChange={(e) => handleUpdateType(type.id, { name: e.target.value })}
+                              className="flex-1"
+                            />
+                            <Input
+                              type="color"
+                              value={type.color}
+                              onChange={(e) => handleUpdateType(type.id, { color: e.target.value })}
+                              className="w-20"
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingType(null)}
+                            >
+                              <Save className="size-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <div
+                              className="size-4 rounded"
+                              style={{ backgroundColor: type.color, opacity: isActive ? 1 : 0.5 }}
+                            />
+                            <span className={`flex-1 ${!isActive ? 'line-through text-gray-500' : ''}`}>
+                              {type.name}
+                            </span>
+                            {!isActive && (
+                              <Badge variant="outline" className="text-gray-500 border-gray-300">
+                                Inativo
+                              </Badge>
+                            )}
+                            <Badge style={{ backgroundColor: type.color, color: 'white', opacity: isActive ? 1 : 0.5 }}>
+                              {type.name}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingType(type.id)}
+                              title="Editar"
+                            >
+                              <Edit2 className="size-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleToggleTypeActive(type.id, isActive)}
+                              title={isActive ? 'Inativar' : 'Ativar'}
+                            >
+                              {isActive ? (
+                                <EyeOff className="size-4 text-orange-600" />
+                              ) : (
+                                <Eye className="size-4 text-green-600" />
+                              )}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Adicionar Novo Tipo */}
@@ -555,62 +599,82 @@ export function SettingsPage({ onUpdateSettings }: SettingsPageProps) {
               <CardContent className="space-y-6">
                 {/* Lista de Categorias */}
                 <div className="space-y-3">
-                  {eventCategories.map((category) => (
-                    <div
-                      key={category.id}
-                      className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
-                    >
-                      {editingCategory === category.id ? (
-                        <>
-                          <Input
-                            value={category.name}
-                            onChange={(e) =>
-                              handleUpdateCategory(category.id, { name: e.target.value })
-                            }
-                            className="flex-1"
-                          />
-                          <Input
-                            type="color"
-                            value={category.color}
-                            onChange={(e) =>
-                              handleUpdateCategory(category.id, { color: e.target.value })
-                            }
-                            className="w-20"
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingCategory(null)}
-                          >
-                            <Save className="size-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <div
-                            className="size-4 rounded"
-                            style={{ backgroundColor: category.color }}
-                          />
-                          <span className="flex-1">{category.name}</span>
-                          <Badge variant="outline">{category.name}</Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setEditingCategory(category.id)}
-                          >
-                            <Edit2 className="size-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeleteCategory(category.id)}
-                          >
-                            <Trash2 className="size-4 text-red-600" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  ))}
+                  {eventCategories.map((category) => {
+                    const isActive = category.active !== false;
+                    return (
+                      <div
+                        key={category.id}
+                        className={`flex items-center gap-3 p-4 rounded-lg transition-all ${
+                          isActive ? 'bg-gray-50' : 'bg-gray-100 opacity-60'
+                        }`}
+                      >
+                        {editingCategory === category.id ? (
+                          <>
+                            <Input
+                              value={category.name}
+                              onChange={(e) =>
+                                handleUpdateCategory(category.id, { name: e.target.value })
+                              }
+                              className="flex-1"
+                            />
+                            <Input
+                              type="color"
+                              value={category.color}
+                              onChange={(e) =>
+                                handleUpdateCategory(category.id, { color: e.target.value })
+                              }
+                              className="w-20"
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingCategory(null)}
+                            >
+                              <Save className="size-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <div
+                              className="size-4 rounded"
+                              style={{ backgroundColor: category.color, opacity: isActive ? 1 : 0.5 }}
+                            />
+                            <span className={`flex-1 ${!isActive ? 'line-through text-gray-500' : ''}`}>
+                              {category.name}
+                            </span>
+                            {!isActive && (
+                              <Badge variant="outline" className="text-gray-500 border-gray-300">
+                                Inativo
+                              </Badge>
+                            )}
+                            <Badge variant="outline" style={{ opacity: isActive ? 1 : 0.5 }}>
+                              {category.name}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingCategory(category.id)}
+                              title="Editar"
+                            >
+                              <Edit2 className="size-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleToggleCategoryActive(category.id, isActive)}
+                              title={isActive ? 'Inativar' : 'Ativar'}
+                            >
+                              {isActive ? (
+                                <EyeOff className="size-4 text-orange-600" />
+                              ) : (
+                                <Eye className="size-4 text-green-600" />
+                              )}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Adicionar Nova Categoria */}

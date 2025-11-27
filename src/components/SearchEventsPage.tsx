@@ -79,20 +79,34 @@ export function SearchEventsPage({ events, onEventClick }: SearchEventsPageProps
       const settings = await settingsApi.getAll();
       
       if (settings.eventTypes?.length > 0) {
-        setEventTypes(settings.eventTypes.map(t => ({
-          id: t.id,
-          name: t.name,
-          color: t.color,
-          icon: t.icon
-        })));
+        // Filtrar apenas tipos ativos
+        const activeTypes = settings.eventTypes
+          .filter(t => t.active !== false)
+          .map(t => ({
+            id: t.id,
+            name: t.name,
+            color: t.color,
+            icon: t.icon,
+            active: t.active
+          }));
+        if (activeTypes.length > 0) {
+          setEventTypes(activeTypes);
+        }
       }
       
       if (settings.eventCategories?.length > 0) {
-        setEventCategories(settings.eventCategories.map(c => ({
-          id: c.id,
-          name: c.name,
-          color: c.color
-        })));
+        // Filtrar apenas categorias ativas
+        const activeCategories = settings.eventCategories
+          .filter(c => c.active !== false)
+          .map(c => ({
+            id: c.id,
+            name: c.name,
+            color: c.color,
+            active: c.active
+          }));
+        if (activeCategories.length > 0) {
+          setEventCategories(activeCategories);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);

@@ -1,4 +1,4 @@
-import { Calendar, Plus, Search, Settings, User, LogOut, Menu, X, Home, ChevronLeft } from 'lucide-react';
+import { Calendar, Plus, Search, Settings, User, LogOut, Menu, X, Home, ChevronLeft, Bell } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
@@ -36,6 +36,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
     { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Início' },
     { id: 'create', label: 'Criar Evento', icon: Plus, shortLabel: 'Criar' },
     { id: 'search', label: 'Buscar Eventos', icon: Search, shortLabel: 'Buscar' },
+    { id: 'notifications', label: 'Notificações', icon: Bell, shortLabel: 'Alertas' },
     { id: 'profile', label: 'Perfil', icon: User, shortLabel: 'Perfil' },
     { id: 'settings', label: 'Configurações', icon: Settings, shortLabel: 'Config' },
   ];

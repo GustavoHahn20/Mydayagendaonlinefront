@@ -6,6 +6,7 @@ import { CreateEventPage } from './components/CreateEventPage';
 import { SearchEventsPage } from './components/SearchEventsPage';
 import { ProfilePage } from './components/ProfilePage';
 import { SettingsPage } from './components/SettingsPage';
+import { NotificationsPage } from './components/NotificationsPage';
 import { EventDialog } from './components/EventDialog';
 import { Event } from './lib/types';
 import { Toaster, toast } from 'sonner';
@@ -21,7 +22,7 @@ import {
 import { User } from './lib/types';
 import { Loader2 } from 'lucide-react';
 
-type Page = 'dashboard' | 'create' | 'search' | 'profile' | 'settings';
+type Page = 'dashboard' | 'create' | 'search' | 'notifications' | 'profile' | 'settings';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -244,6 +245,7 @@ export default function App() {
                 onEventUpdate={handleUpdateEvent}
                 onEventDelete={handleDeleteEvent}
                 onCreateEvent={() => setCurrentPage('create')}
+                onNavigateToNotifications={() => setCurrentPage('notifications')}
               />
             )}
 
@@ -256,6 +258,13 @@ export default function App() {
 
             {currentPage === 'search' && (
               <SearchEventsPage
+                events={events}
+                onEventClick={handleEventClick}
+              />
+            )}
+
+            {currentPage === 'notifications' && (
+              <NotificationsPage
                 events={events}
                 onEventClick={handleEventClick}
               />
