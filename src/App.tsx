@@ -36,8 +36,8 @@ export default function App() {
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Email do administrador padrão do sistema
-  const ADMIN_EMAIL = 'admin@myday.com';
+  // Email do administrador do sistema (configurado via variável de ambiente)
+  const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || '';
 
   // Verificar autenticação ao carregar
   useEffect(() => {
@@ -59,10 +59,11 @@ export default function App() {
           // Limpar notificações dispensadas para que apareçam novamente ao logar
           clearDismissedNotifications();
           
-          // Verificar se é o usuário admin
+          // Verificar se é o usuário admin (apenas se ADMIN_EMAIL estiver configurado)
+          const isAdmin = ADMIN_EMAIL && result.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
           const userWithRole: User = {
             ...result.user,
-            role: result.user.email === ADMIN_EMAIL ? 'admin' : (result.user.role || 'user')
+            role: isAdmin ? 'admin' : (result.user.role || 'user')
           };
           
           setUser(userWithRole);
@@ -97,10 +98,11 @@ export default function App() {
     // Limpar notificações dispensadas para que apareçam novamente ao logar
     clearDismissedNotifications();
     
-    // Verificar se é o usuário admin
+    // Verificar se é o usuário admin (apenas se ADMIN_EMAIL estiver configurado)
+    const isAdmin = ADMIN_EMAIL && userData.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
     const userWithRole: User = {
       ...userData,
-      role: userData.email === ADMIN_EMAIL ? 'admin' : (userData.role || 'user')
+      role: isAdmin ? 'admin' : (userData.role || 'user')
     };
     
     setUser(userWithRole);
