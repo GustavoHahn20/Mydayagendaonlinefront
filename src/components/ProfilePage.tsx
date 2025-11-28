@@ -15,7 +15,8 @@ import {
   Globe,
   Home,
   ChevronRight,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { User as UserType } from '../lib/types';
 import { motion } from 'motion/react';
@@ -28,19 +29,10 @@ interface ProfilePageProps {
 
 export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
   const [profileData, setProfileData] = useState(user);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
   const [isSaving, setIsSaving] = useState(false);
 
   const updateProfileField = (field: keyof UserType, value: string) => {
     setProfileData({ ...profileData, [field]: value });
-  };
-
-  const updatePasswordField = (field: string, value: string) => {
-    setPasswordData({ ...passwordData, [field]: value });
   };
 
   const handleSaveProfile = async () => {
@@ -54,21 +46,9 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
     }
   };
 
-  const handleChangePassword = () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('As senhas não coincidem!');
-      return;
-    }
-    if (passwordData.newPassword.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres!');
-      return;
-    }
-    // TODO: Implementar endpoint de alteração de senha na API
-    toast.success('Senha alterada com sucesso!');
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
+  const handleNotAvailable = () => {
+    toast.info('Funcionalidade em desenvolvimento', {
+      description: 'Esta opção estará disponível em breve.',
     });
   };
 
@@ -121,7 +101,10 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
                       {getInitials(profileData.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <button className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 sm:p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                  <button 
+                    onClick={handleNotAvailable}
+                    className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 sm:p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                  >
                     <Camera className="size-3 sm:size-4 text-gray-600" />
                   </button>
                 </div>
@@ -165,15 +148,17 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-2">
+                    <Label htmlFor="email" className="flex items-center gap-2 text-gray-400">
                       <Mail className="size-4" />
                       E-mail
+                      <span className="text-xs text-gray-400">(não editável)</span>
                     </Label>
                     <Input
                       id="email"
                       type="email"
                       value={profileData.email}
-                      onChange={(e) => updateProfileField('email', e.target.value)}
+                      disabled
+                      className="bg-gray-100 cursor-not-allowed opacity-60"
                     />
                   </div>
                 </div>
@@ -193,15 +178,16 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="timezone" className="flex items-center gap-2">
+                    <Label htmlFor="timezone" className="flex items-center gap-2 text-gray-400">
                       <Globe className="size-4" />
                       Fuso Horário
+                      <span className="text-xs text-gray-400">(não editável)</span>
                     </Label>
                     <Input
                       id="timezone"
-                      value={profileData.timezone || ''}
-                      onChange={(e) => updateProfileField('timezone', e.target.value)}
-                      placeholder="America/Sao_Paulo"
+                      value={profileData.timezone || 'America/Sao_Paulo'}
+                      disabled
+                      className="bg-gray-100 cursor-not-allowed opacity-60"
                     />
                   </div>
                 </div>
@@ -229,9 +215,15 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
           <TabsContent value="account">
             <Card>
               <CardHeader>
-                <CardTitle>Informações da Conta</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle>Informações da Conta</CardTitle>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full flex items-center gap-1">
+                    <AlertCircle className="size-3" />
+                    Em breve
+                  </span>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 opacity-60">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div>
@@ -259,7 +251,7 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
                       <p className="text-gray-700">Plano</p>
                       <p className="text-sm text-gray-600">Gratuito</p>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" disabled onClick={handleNotAvailable}>
                       Fazer Upgrade
                     </Button>
                   </div>
@@ -268,26 +260,26 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
                 <div className="pt-4 border-t">
                   <h3 className="text-gray-900 mb-4">Zona de Perigo</h3>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg">
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div>
                         <p className="text-gray-700">Desativar Conta</p>
                         <p className="text-sm text-gray-600">
                           Sua conta será temporariamente desativada
                         </p>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" disabled onClick={handleNotAvailable}>
                         Desativar
                       </Button>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg">
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div>
                         <p className="text-gray-700">Excluir Conta</p>
                         <p className="text-sm text-gray-600">
                           Todos os seus dados serão permanentemente apagados
                         </p>
                       </div>
-                      <Button variant="destructive" size="sm">
+                      <Button variant="outline" size="sm" disabled onClick={handleNotAvailable}>
                         Excluir
                       </Button>
                     </div>
@@ -301,50 +293,56 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
           <TabsContent value="security">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lock className="size-5" />
-                  Alterar Senha
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2">
+                    <Lock className="size-5" />
+                    Alterar Senha
+                  </CardTitle>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full flex items-center gap-1">
+                    <AlertCircle className="size-3" />
+                    Em breve
+                  </span>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 opacity-60">
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">Senha Atual</Label>
+                  <Label htmlFor="current-password" className="text-gray-400">Senha Atual</Label>
                   <Input
                     id="current-password"
                     type="password"
-                    value={passwordData.currentPassword}
-                    onChange={(e) => updatePasswordField('currentPassword', e.target.value)}
                     placeholder="Digite sua senha atual"
+                    disabled
+                    className="bg-gray-100 cursor-not-allowed"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">Nova Senha</Label>
+                  <Label htmlFor="new-password" className="text-gray-400">Nova Senha</Label>
                   <Input
                     id="new-password"
                     type="password"
-                    value={passwordData.newPassword}
-                    onChange={(e) => updatePasswordField('newPassword', e.target.value)}
                     placeholder="Digite sua nova senha"
+                    disabled
+                    className="bg-gray-100 cursor-not-allowed"
                   />
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-500">
                     A senha deve ter pelo menos 6 caracteres
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                  <Label htmlFor="confirm-password" className="text-gray-400">Confirmar Nova Senha</Label>
                   <Input
                     id="confirm-password"
                     type="password"
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => updatePasswordField('confirmPassword', e.target.value)}
                     placeholder="Confirme sua nova senha"
+                    disabled
+                    className="bg-gray-100 cursor-not-allowed"
                   />
                 </div>
 
                 <div className="pt-4">
-                  <Button onClick={handleChangePassword} className="gap-2">
+                  <Button className="gap-2" disabled onClick={handleNotAvailable}>
                     <Lock className="size-4" />
                     Alterar Senha
                   </Button>
@@ -359,7 +357,7 @@ export function ProfilePage({ user, onUpdateUser }: ProfilePageProps) {
                         Adicione uma camada extra de segurança
                       </p>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" disabled onClick={handleNotAvailable}>
                       Ativar
                     </Button>
                   </div>

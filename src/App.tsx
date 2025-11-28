@@ -7,6 +7,7 @@ import { SearchEventsPage } from './components/SearchEventsPage';
 import { ProfilePage } from './components/ProfilePage';
 import { SettingsPage } from './components/SettingsPage';
 import { NotificationsPage } from './components/NotificationsPage';
+import { AdminPage } from './components/AdminPage';
 import { EventDialog } from './components/EventDialog';
 import { Event } from './lib/types';
 import { Toaster, toast } from 'sonner';
@@ -23,7 +24,7 @@ import { User } from './lib/types';
 import { Loader2 } from 'lucide-react';
 import { clearDismissedNotifications } from './lib/notifications';
 
-type Page = 'dashboard' | 'create' | 'search' | 'notifications' | 'profile' | 'settings';
+type Page = 'dashboard' | 'create' | 'search' | 'notifications' | 'profile' | 'settings' | 'admin';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -34,6 +35,9 @@ export default function App() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // Email do administrador padrão do sistema
+  const ADMIN_EMAIL = 'admin@myday.com';
 
   // Verificar autenticação ao carregar
   useEffect(() => {
@@ -55,7 +59,13 @@ export default function App() {
           // Limpar notificações dispensadas para que apareçam novamente ao logar
           clearDismissedNotifications();
           
-          setUser(result.user as User);
+          // Verificar se é o usuário admin
+          const userWithRole: User = {
+            ...result.user,
+            role: result.user.email === ADMIN_EMAIL ? 'admin' : (result.user.role || 'user')
+          };
+          
+          setUser(userWithRole);
           setIsLoggedIn(true);
         } else {
           // Token inválido, fazer logout
@@ -87,11 +97,24 @@ export default function App() {
     // Limpar notificações dispensadas para que apareçam novamente ao logar
     clearDismissedNotifications();
     
-    setUser(userData as User);
+    // Verificar se é o usuário admin
+    const userWithRole: User = {
+      ...userData,
+      role: userData.email === ADMIN_EMAIL ? 'admin' : (userData.role || 'user')
+    };
+    
+    setUser(userWithRole);
     setIsLoggedIn(true);
-    toast.success('Bem-vindo ao MyDay!', {
-      description: `Olá, ${userData.name}! Vá em frente e organize seu dia com estilo.`,
-    });
+    
+    if (userWithRole.role === 'admin') {
+      toast.success('Bem-vindo, Administrador!', {
+        description: `Olá, ${userData.name}! Você tem acesso ao painel de administração.`,
+      });
+    } else {
+      toast.success('Bem-vindo ao MyDay!', {
+        description: `Olá, ${userData.name}! Vá em frente e organize seu dia com estilo.`,
+      });
+    }
   };
 
   const handleLogout = () => {
@@ -234,6 +257,7 @@ export default function App() {
           onLogout={handleLogout}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          user={user}
         />
 
         <AnimatePresence mode="wait">
@@ -244,7 +268,7 @@ export default function App() {
             exit="exit"
             variants={pageVariants}
             transition={{ duration: 0.3 }}
-            className="flex-1 min-h-0 flex flex-col overflow-hidden pt-20 pb-44 lg:pt-0 lg:pb-0"
+            className="flex-1 min-h-0 flex flex-col overflow-hidden pt-24 pb-52 lg:pt-0 lg:pb-0"
           >
             {currentPage === 'dashboard' && (
               <Dashboard
@@ -288,6 +312,10 @@ export default function App() {
               <SettingsPage
                 onUpdateSettings={handleUpdateSettings}
               />
+            )}
+
+            {currentPage === 'admin' && user?.role === 'admin' && (
+              <AdminPage />
             )}
           </motion.div>
         </AnimatePresence>

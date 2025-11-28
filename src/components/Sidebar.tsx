@@ -1,7 +1,8 @@
-import { Calendar, Plus, Search, Settings, User, LogOut, Menu, X, Home, ChevronLeft, Bell } from 'lucide-react';
+import { Calendar, Plus, Search, Settings, User, LogOut, Menu, X, Home, ChevronLeft, Bell, Shield } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
+import { User as UserType } from '../lib/types';
 
 interface SidebarProps {
   currentPage: string;
@@ -9,11 +10,14 @@ interface SidebarProps {
   onLogout: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  user?: UserType | null;
 }
 
-export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false, onToggleCollapse, user }: SidebarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  const isAdmin = user?.role === 'admin';
 
   // Detectar tamanho da tela
   useEffect(() => {
@@ -32,7 +36,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
     }
   }, [currentPage, isMobile]);
 
-  const menuItems = [
+  const baseMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Início' },
     { id: 'create', label: 'Criar Evento', icon: Plus, shortLabel: 'Criar' },
     { id: 'search', label: 'Buscar Eventos', icon: Search, shortLabel: 'Buscar' },
@@ -40,6 +44,11 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
     { id: 'profile', label: 'Perfil', icon: User, shortLabel: 'Perfil' },
     { id: 'settings', label: 'Configurações', icon: Settings, shortLabel: 'Config' },
   ];
+
+  // Adicionar item Admin se usuário for admin
+  const menuItems = isAdmin 
+    ? [...baseMenuItems, { id: 'admin', label: 'Administração', icon: Shield, shortLabel: 'Admin' }]
+    : baseMenuItems;
 
   // Itens principais para a navegação inferior mobile
   const mobileNavItems = menuItems.slice(0, 4);
@@ -136,7 +145,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
     <>
       {/* Mobile Header - Botão de menu hamburguer */}
       <motion.div
-        className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 pt-6 pb-3 flex items-center justify-between shadow-sm safe-area-pt"
+        className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 pt-10 pb-4 flex items-center justify-between shadow-sm safe-area-pt"
         initial={{ y: -60 }}
         animate={{ y: 0 }}
       >
@@ -190,7 +199,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
 
       {/* Mobile Bottom Navigation */}
       <motion.nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 pt-3 pb-6 safe-area-pb shadow-lg"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 pt-3 pb-8 safe-area-pb shadow-lg"
         initial={{ y: 100 }}
         animate={{ y: 0 }}
       >

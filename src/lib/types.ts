@@ -46,6 +46,7 @@ export interface User {
   avatar?: string;
   phone?: string;
   timezone?: string;
+  role?: 'user' | 'admin';
 }
 
 export type CalendarView = 'day' | 'week' | 'month';

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Checkbox } from './ui/checkbox';
 import { Calendar, Lock, Mail, Sparkles, ArrowRight, Zap, User, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { authApi, AuthResponse } from '../lib/api';
@@ -17,7 +16,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -288,27 +286,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               </motion.div>
             )}
 
-            {!isRegister && (
-              <motion.div
-                className="flex items-center justify-between"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-              >
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <Checkbox
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                    className="border-gray-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
-                    disabled={isLoading}
-                  />
-                  <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Lembrar-me</span>
-                </label>
-                <a href="#" className="text-sm text-indigo-600 hover:text-indigo-700 hover:underline transition-colors">
-                  Esqueceu a senha?
-                </a>
-              </motion.div>
-            )}
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}

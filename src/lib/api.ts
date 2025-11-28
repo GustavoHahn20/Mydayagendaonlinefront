@@ -26,6 +26,7 @@ interface ApiAuthResponse {
     phone?: string;
     timezone?: string;
     avatar?: string;
+    role?: 'user' | 'admin';
   };
 }
 
@@ -39,6 +40,7 @@ export interface AuthResponse {
     phone?: string;
     timezone?: string;
     avatar?: string;
+    role?: 'user' | 'admin';
   };
 }
 
