@@ -60,7 +60,7 @@ export function Dashboard({ events, onEventUpdate, onEventDelete, onCreateEvent,
   });
 
   return (
-    <div className="flex-1 bg-gradient-to-br from-gray-50 to-blue-50/30 p-4 sm:p-5 md:p-6 lg:p-8 overflow-auto h-full">
+    <div className="flex-1 bg-gradient-to-br from-gray-50 to-blue-50/30 p-4 pt-6 sm:p-5 md:p-6 lg:p-8 overflow-auto h-full pb-8">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Breadcrumb */}
         <motion.nav

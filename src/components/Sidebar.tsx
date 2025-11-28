@@ -136,7 +136,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout, isCollapsed = false
     <>
       {/* Mobile Header - Botão de menu hamburguer */}
       <motion.div
-        className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 pt-4 pb-3 flex items-center justify-between shadow-sm safe-area-pt"
+        className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 pt-6 pb-3 flex items-center justify-between shadow-sm safe-area-pt"
         initial={{ y: -60 }}
         animate={{ y: 0 }}
       >
