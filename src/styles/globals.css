@@ -137,11 +137,11 @@ html {
 
 /* Safe area para dispositivos com notch */
 .safe-area-pb {
-  padding-bottom: env(safe-area-inset-bottom, 12px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
 
 .safe-area-pt {
-  padding-top: env(safe-area-inset-top, 0);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 4px);
 }
 
 .safe-area-inset {
