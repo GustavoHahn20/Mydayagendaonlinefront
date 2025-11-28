@@ -244,7 +244,7 @@ export default function App() {
             exit="exit"
             variants={pageVariants}
             transition={{ duration: 0.3 }}
-            className="flex-1 min-h-0 flex flex-col overflow-hidden pt-16 pb-24 lg:pt-0 lg:pb-0"
+            className="flex-1 min-h-0 flex flex-col overflow-hidden pt-16 pb-32 lg:pt-0 lg:pb-0"
           >
             {currentPage === 'dashboard' && (
               <Dashboard
